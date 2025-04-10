@@ -1,0 +1,298 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2575.4">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
+  </style>
+</head>
+<body>
+<p class="p1">&lt;!DOCTYPE html&gt;</p>
+<p class="p1">&lt;html lang="en"&gt;</p>
+<p class="p1">&lt;head&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;meta charset="UTF-8"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;title&gt;City of ETEC - Test Dashboard&lt;/title&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;style&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>body {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>background: linear-gradient(135deg, #1e1e2f, #121217);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>color: #fff;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>margin: 0;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>padding: 20px;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>.dashboard {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>text-align: center;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>h1 {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>font-size: 2rem;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>color: #00bcd4;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>margin-bottom: 30px;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>.tower-container {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>display: flex;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>flex-wrap: wrap;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>justify-content: center;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>gap: 24px;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>.tower {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>background: #262b3a;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>border-radius: 16px;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>padding: 20px;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>width: 100%;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>max-width: 300px;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>transition: transform 0.2s ease-in-out;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>cursor: pointer;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>.tower:hover {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>transform: translateY(-4px);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>.tower h2 {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>font-size: 1.2rem;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>margin-bottom: 16px;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>color: #f5f5f5;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>.water-tank {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>position: relative;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>width: 100%;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>height: 200px;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>margin: 20px 0;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>display: flex;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>align-items: center;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>justify-content: center;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>.water-tank img {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>transition: filter 0.5s ease, transform 0.5s ease;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>cursor: pointer;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>.status, .pump-status, .alarm {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>font-weight: 600;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>padding: 10px;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>margin: 8px 0;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>border-radius: 8px;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>font-size: 0.95rem;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>.pump-running {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>background: #2e7d32;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>color: #fff;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>.pump-stopped {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>background: #c62828;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>color: #fff;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>.alarm-none {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>background: #004d40;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>color: #a7ffeb;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>.alarm-active {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>background: #c62828;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>color: #fff;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>animation: blink 1s infinite;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>.status-ok {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>background: #1b5e20;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>color: #a5d6a7;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>.status-warning {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>background: #f9a825;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>color: #fff;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>.status-critical {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>background: #b71c1c;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>color: #fff;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>.flash-red {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>animation: flash-red 1s infinite;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>filter: hue-rotate(0deg) saturate(2);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>transform: scale(1.05);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>@keyframes flash-red {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>0% { filter: brightness(1); }</p>
+<p class="p1"><span class="Apple-converted-space">      </span>50% { filter: brightness(2) saturate(2) hue-rotate(0deg); }</p>
+<p class="p1"><span class="Apple-converted-space">      </span>100% { filter: brightness(1); }</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>@keyframes blink {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>0% { opacity: 1; }</p>
+<p class="p1"><span class="Apple-converted-space">      </span>50% { opacity: 0.4; }</p>
+<p class="p1"><span class="Apple-converted-space">      </span>100% { opacity: 1; }</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>.modal {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>position: fixed;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>top: 0;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>left: 0;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>width: 100vw;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>height: 100vh;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>background: rgba(0, 0, 0, 0.7);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>display: none;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>justify-content: center;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>align-items: center;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>z-index: 1000;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>.modal-content {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>background: #2a2f45;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>padding: 30px;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>border-radius: 10px;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>max-width: 400px;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>color: #fff;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>text-align: left;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>.modal h3 {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>margin-top: 0;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>color: #00bcd4;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>.modal button {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>margin-top: 20px;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>background: #00bcd4;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>border: none;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>color: #000;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>padding: 10px 20px;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>border-radius: 6px;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>cursor: pointer;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/style&gt;</p>
+<p class="p1">&lt;/head&gt;</p>
+<p class="p1">&lt;body&gt;</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">     </span>&lt;button onclick="fetchStatuses()" style="margin-left: 10px; padding: 4px 10px; font-size: 0.8rem; background: #00bcd4; color: #000; border: none; border-radius: 5px; cursor: pointer;"&gt;Refresh Now&lt;/button&gt; (&lt;span id="dashboard-refresh-ago"&gt;0s ago&lt;/span&gt;)&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;h1&gt;City of ETEC&lt;/h1&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="tower-container"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="tower"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;h2&gt;ETEC&lt;br&gt;Communications Tower&lt;/h2&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="water-tank"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;img id="icon1" src="https://img.icons8.com/ios/100/00FF00/radio-tower.png" alt="Communication Tower Icon" /&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="status status-ok"&gt;Status: OK&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="pump-status pump-running"&gt;Modem: Online&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="pump-status pump-running"&gt;Top Box LAN: Online&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="alarm alarm-none" id="alarm-indicator"&gt;Alarm: None&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;div class="modal" id="towerModal"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="modal-content"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;p id="last-updated" style="font-size: 0.8rem; color: #aaa; margin-bottom: 10px;"&gt;Last updated: &lt;span id="last-updated-time"&gt;Never&lt;/span&gt;&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;h3&gt;ETEC Communications Tower&lt;/h3&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;p style="margin-top: -10px; color: #ccc; font-size: 0.9rem;"&gt;Power Data&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;p&gt;&lt;strong&gt;Timestamp:&lt;/strong&gt; &lt;span id="modal-time"&gt;&lt;/span&gt;&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;p&gt;&lt;strong&gt;Power (W):&lt;/strong&gt; &lt;span id="power-value"&gt;Loading...&lt;/span&gt;&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;p&gt;&lt;strong&gt;Energy (Wh):&lt;/strong&gt; &lt;span id="energy-value"&gt;Loading...&lt;/span&gt;&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;p&gt;&lt;strong&gt;Voltage (V):&lt;/strong&gt; &lt;span id="voltage-value"&gt;Loading...&lt;/span&gt;&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;button onclick="document.getElementById('towerModal').style.display='none'"&gt;Close&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;script&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>async function fetchStatuses() {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const statusUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQy9cBSn5Cj8K0Xny7rSHB_hB63-g7s6zrb0cITbzUptV7gvM1G5SkJIJpmeAeuy8tAhDfuwVkyGKJ_/pub?gid=0&amp;single=true&amp;output=csv&amp;cachebust=" + new Date().getTime();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const powerUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSOtszkSs6Jsvi4I8AaEVnWUTe7l8HF8z6pNOxwG5O6OY3r1X86nWP_ANqwbC6JJc95jMXvurR4P17F/pub?gid=0&amp;single=true&amp;output=csv&amp;cachebust=" + new Date().getTime();</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>try {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const [statusResponse, powerResponse] = await Promise.all([</p>
+<p class="p1"><span class="Apple-converted-space">          </span>fetch(statusUrl),</p>
+<p class="p1"><span class="Apple-converted-space">          </span>fetch(powerUrl)</p>
+<p class="p1"><span class="Apple-converted-space">        </span>]);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>const statusText = await statusResponse.text();</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const powerText = await powerResponse.text();</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>const parseCSV = (csv) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>const lines = csv.trim().split("\n");</p>
+<p class="p1"><span class="Apple-converted-space">          </span>const headers = lines[0].split(",");</p>
+<p class="p1"><span class="Apple-converted-space">          </span>const values = lines[1].split(",");</p>
+<p class="p1"><span class="Apple-converted-space">          </span>const data = {};</p>
+<p class="p1"><span class="Apple-converted-space">          </span>headers.forEach((key, i) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>data[key.trim()] = values[i]?.trim();</p>
+<p class="p1"><span class="Apple-converted-space">          </span>});</p>
+<p class="p1"><span class="Apple-converted-space">          </span>return data;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>const statusData = parseCSV(statusText);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const powerData = parseCSV(powerText);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>const modemStatus = document.querySelectorAll('.pump-status')[0];</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const lanStatus = document.querySelectorAll('.pump-status')[1];</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const overallStatus = document.querySelector('.status');</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>modemStatus.textContent = `Modem: ${statusData["Modem"] || "Unknown"}`;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>modemStatus.className = statusData["Modem"] === 'Offline' ? 'pump-status pump-stopped' : 'pump-status pump-running';</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>lanStatus.textContent = `Top Box LAN: ${statusData["Top Box LAN"] || "Unknown"}`;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>lanStatus.className = statusData["Top Box LAN"] === 'Offline' ? 'pump-status pump-stopped' : 'pump-status pump-running';</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>let lastOfflineTime = window.lastOfflineTime || null;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const isModemOffline = statusData["Modem"] === 'Offline';</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const isLanOffline = statusData["Top Box LAN"] === 'Offline';</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const isOffline = isModemOffline || isLanOffline;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>if (isOffline) {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>if (!lastOfflineTime) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>lastOfflineTime = Date.now();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>window.lastOfflineTime = lastOfflineTime;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>}</p>
+<p class="p1"><span class="Apple-converted-space">          </span>const elapsed = (Date.now() - lastOfflineTime) / 1000;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>if (elapsed &gt;= 15) {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>overallStatus.className = 'status status-critical';</p>
+<p class="p1"><span class="Apple-converted-space">          </span>overallStatus.textContent = 'Status: CRITICAL';</p>
+<p class="p1"><span class="Apple-converted-space">          </span>document.getElementById("alarm-indicator").textContent = "Alarm: Active";</p>
+<p class="p1"><span class="Apple-converted-space">          </span>document.getElementById("alarm-indicator").className = overallStatus.classList.contains('status-critical') ? "alarm alarm-active" : "alarm status-warning";</p>
+<p class="p1"><span class="Apple-converted-space">          </span>document.getElementById("icon1").src = "https://img.icons8.com/ios/100/FF0000/radio-tower.png";</p>
+<p class="p1"><span class="Apple-converted-space">        </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>overallStatus.className = 'status status-warning';</p>
+<p class="p1"><span class="Apple-converted-space">          </span>overallStatus.textContent = 'Status: WARNING';</p>
+<p class="p1"><span class="Apple-converted-space">          </span>document.getElementById("alarm-indicator").textContent = "Alarm: Active";</p>
+<p class="p1"><span class="Apple-converted-space">          </span>document.getElementById("alarm-indicator").className = "alarm status-warning";</p>
+<p class="p1"><span class="Apple-converted-space">          </span>document.getElementById("icon1").src = "https://img.icons8.com/ios/100/FFFF00/radio-tower.png";</p>
+<p class="p1"><span class="Apple-converted-space">          </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>window.lastOfflineTime = null;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>overallStatus.className = 'status status-ok';</p>
+<p class="p1"><span class="Apple-converted-space">          </span>overallStatus.textContent = 'Status: OK';</p>
+<p class="p1"><span class="Apple-converted-space">          </span>document.getElementById("alarm-indicator").textContent = "Alarm: None";</p>
+<p class="p1"><span class="Apple-converted-space">          </span>document.getElementById("alarm-indicator").className = "alarm alarm-none";</p>
+<p class="p1"><span class="Apple-converted-space">          </span>document.getElementById("icon1").src = "https://img.icons8.com/ios/100/00FF00/radio-tower.png";</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>document.getElementById("modal-time").textContent = powerData["Timestamp"] || "N/A";</p>
+<p class="p1"><span class="Apple-converted-space">        </span>document.getElementById("power-value").textContent = powerData["Power (W)"] || "N/A";</p>
+<p class="p1"><span class="Apple-converted-space">        </span>document.getElementById("energy-value").textContent = powerData["Energy (Wh)"] || "N/A";</p>
+<p class="p1"><span class="Apple-converted-space">        </span>document.getElementById("voltage-value").textContent = powerData["Voltage (V)"] || "N/A";</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const nowTime = new Date().toLocaleTimeString();</p>
+<p class="p1"><span class="Apple-converted-space">        </span>document.getElementById("last-updated-time").textContent = nowTime;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const dashboardTime = document.getElementById("dashboard-refresh-time");</p>
+<p class="p1"><span class="Apple-converted-space">        </span>if (dashboardTime) dashboardTime.textContent = nowTime;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>window.lastRefreshTimestamp = Date.now();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>} catch (error) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>console.error("Error fetching status or power data from Google Sheets:", error);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>document.addEventListener('DOMContentLoaded', () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const icon = document.getElementById('icon1');</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (icon) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>icon.addEventListener('click', () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>const modal = document.getElementById('towerModal');</p>
+<p class="p1"><span class="Apple-converted-space">          </span>if (modal) modal.style.display = 'flex';</p>
+<p class="p1"><span class="Apple-converted-space">        </span>});</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p1"><span class="Apple-converted-space">      </span>fetchStatuses();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>setInterval(fetchStatuses, 30000);</p>
+<p class="p1">});</p>
+<p class="p1"><span class="Apple-converted-space">  </span>setInterval(() =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const agoDisplay = document.getElementById("dashboard-refresh-ago");</p>
+<p class="p1"><span class="Apple-converted-space">  </span>if (window.lastRefreshTimestamp &amp;&amp; agoDisplay) {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const secondsAgo = Math.floor((Date.now() - window.lastRefreshTimestamp) / 1000);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>agoDisplay.textContent = `${secondsAgo}s ago`;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p1">}, 1000);</p>
+<p class="p1">&lt;/script&gt;</p>
+<p class="p1">&lt;/body&gt;</p>
+<p class="p1">&lt;/html&gt;</p>
+</body>
+</html>
