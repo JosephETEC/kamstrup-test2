@@ -1,4 +1,43 @@
-<!DOCTYPE html>
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
@@ -7,7 +46,8 @@
   <link href="https://unpkg.com/leaflet/dist/leaflet.css" rel="stylesheet" />
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-  <link href="manifest.json" rel="manifest"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -97,7 +137,7 @@
 <div style="display: flex; justify-content: center; gap: 20px; margin: 20px 0; flex-wrap: wrap;">
   <div style="flex: 1 1 300px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 20px; text-align: center;">
     <h2 style="margin: 0; color: #2c5782;">Total Meters / Missing Reads</h2>
-    <p id="total-missing" style="font-size: 1.8em; margin: 10px 0;">Loading...</p>
+    <p id="total-missing" style="font-size: 1.8em; margin:10px 0;">Loading...</p>
   </div>
   <div style="flex: 1 1 300px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 20px; text-align: center;">
     <h2 style="margin: 0; color: #2c5782;">Reading Performance</h2>
@@ -107,7 +147,6 @@
     <h2 style="margin: 0; color: #2c5782;">Collector Status</h2>
     <p id="collector-status" style="font-size: 1.8em; margin: 10px 0;">Loading...</p>
   </div>
-  </div>
 </div>
 <div id="map"></div>
 <div class="info">
@@ -116,34 +155,15 @@
       <tr><th>Collector Name</th><th>Serial Number</th><th>Last Contact</th><th>Comments</th></tr>
     </thead>
     <tbody>
-      <tr><td id="name-73375555">Loading...</td><td>73375555</td><td id="date-73375555">Loading...</td><td id="comment-73375555">Loading...</td></tr>
-      <tr><td id="name-73375489">Loading...</td><td>73375489</td><td id="date-73375489">Loading...</td><td id="comment-73375489">Loading...</td></tr>
+      <!-- Dynamically populated Bayou Liberty collectors -->
     </tbody>
   </table>
 </div>
-
-
-<div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; margin-top: 30px;">
-  
-  
-</div>
-
-
-<div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; margin-top: 30px;">
-  
-<div style="width: 100%; margin-top: 10px;">
-    </div>
-</div>
-
-  
 <div style="flex: 1 1 300px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 10px 10px 5px; text-align: center;">
-<h2 style="margin: 0; color: #b91c1c; font-size: 1.1em;">HIGH Priority Info Codes</h2>
+  <h2 style="margin: 0; color: #b91c1c; font-size: 1.1em;">HIGH Priority Info Codes</h2>
   <p id="high-priority-codes" style="font-size: 1.6em; margin: 10px 0; color: #b91c1c;"></p>
-<canvas id="infoCodeChart" height="120" style="margin-top: 10px;"></canvas>
+  <canvas id="infoCodeChart" height="120" style="margin-top: 10px;"></canvas>
 </div>
-
-</div>
-
 <div style="margin-top: 30px;">
   <a href="louisiana.html" style="display:inline-block;padding:10px 20px;background:#2c5782;color:white;text-decoration:none;border-radius:5px;">← Back to Louisiana Collectors</a>
 </div>
@@ -156,51 +176,24 @@ function updateCollectorStatus() {
       const data = results.data.slice(1);
       let onlineCount = 0;
       let offlineCount = 0;
-
       data.forEach(row => {
         const city = row[0]?.trim().toLowerCase();
-        const issue = row[5]?.trim().toLowerCase();
-
+        const issue = row[5]?.trim();
         if (city === "bayou liberty") {
-          if (issue === "yes") {
-            offlineCount++;
-          } else if (issue === "no") {
-            onlineCount++;
-          }
+          if (issue === "Yes") offlineCount++;
+          else if (issue === "No") onlineCount++;
         }
       });
-
       const statusEl = document.getElementById("collector-status");
       statusEl.innerText = `Online: ${onlineCount} / Offline: ${offlineCount}`;
       statusEl.style.color = offlineCount > 0 ? "#e11d48" : "#10b981";
+    },
+    error: function(error) {
+      console.error("Failed to fetch collector status:", error);
+      document.getElementById("collector-status").innerText = "Error loading status";
     }
   });
 }
-document.addEventListener("DOMContentLoaded", updateCollectorStatus);
-</script>
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-  var map = L.map('map').setView([30.285, -89.818], 13);
-
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '© OpenStreetMap contributors'
-  }).addTo(map);
-
-  var waterTower = L.marker([30.27077, -89.82333]).addTo(map)
-    .bindPopup("Water Tower Collector");
-
-  var well3 = L.marker([30.30153, -89.81293]).addTo(map)
-    .bindPopup("Well #3 Collector");
-
-  map.fitBounds([
-    [30.27077, -89.82333],
-    [30.30153, -89.81293]
-  ]);
-});
-</script>
-
-<script>
 function updateReadingAndMissingData() {
   Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=0&single=true&output=csv", {
     download: true,
@@ -208,68 +201,21 @@ function updateReadingAndMissingData() {
     complete: function(results) {
       const data = results.data;
       const row = data.find(r => r["City"]?.trim().toLowerCase() === "bayou liberty");
-
       if (row) {
-        const totalMeters = row["Total Meters"] || "N/A";
-        const missingReads = row["Meters with Missing Reads"] || "N/A";
-        const performance = row["Performance (%)"] || "N/A";
-
-        document.getElementById("total-missing").innerText = `${totalMeters} / ${missingReads}`;
-        document.getElementById("reading-performance").innerText = performance;
+        document.getElementById("total-missing").innerText = `${row["Total Meters"] || "N/A"} / ${row["Meters with Missing Reads"] || "N/A"}`;
+        document.getElementById("reading-performance").innerText = `${row["Performance (%)"] || "N/A"}%`;
       } else {
         document.getElementById("total-missing").innerText = "Not Found";
         document.getElementById("reading-performance").innerText = "Not Found";
       }
     },
-    error: function(err) {
-      console.error("Error loading CSV:", err);
+    error: function(error) {
+      console.error("Failed to fetch reading data:", error);
+      document.getElementById("total-missing").innerText = "Error";
+      document.getElementById("reading-performance").innerText = "Error";
     }
   });
 }
-
-document.addEventListener("DOMContentLoaded", updateReadingAndMissingData);
-</script>
-
-
-<script>
-function updateCollectorTable() {
-  const serials = ["73375555", "73375489"];
-
-  Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=96572475&single=true&output=csv", {
-    download: true,
-    header: true,
-    complete: function(results) {
-      const data = results.data;
-
-      serials.forEach(serial => {
-        const match = data.find(row => row["Serial Number"]?.trim() === serial);
-
-        if (match) {
-          document.getElementById(`name-${serial}`).innerText = match["Collector Name"] || "N/A";
-          document.getElementById(`date-${serial}`).innerText = match["Last Contact"] || "N/A";
-          document.getElementById(`comment-${serial}`).innerText = match["Comments"] || "N/A";
-        } else {
-          document.getElementById(`name-${serial}`).innerText = "Not Found";
-          document.getElementById(`date-${serial}`).innerText = "Not Found";
-          document.getElementById(`comment-${serial}`).innerText = "Not Found";
-        }
-      });
-    },
-    error: function(err) {
-      console.error("Error loading collector data:", err);
-    }
-  });
-}
-
-document.addEventListener("DOMContentLoaded", updateCollectorTable);
-</script>
-
-
-
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
-<script>
 function renderInfoCodeChart() {
   Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQKvCYwfdM0Pr8FR86WI4tkteELWXNLejguUNygSG41R9blMjXLB6atYKmWvvI5Z8tOfZ7EC62A4I4l/pub?gid=188207719&single=true&output=csv", {
     download: true,
@@ -278,98 +224,131 @@ function renderInfoCodeChart() {
       const data = results.data.filter(r => r["Info Code"] && r["Count"]);
       const labels = data.map(row => row["Info Code"]);
       const counts = data.map(row => parseInt(row["Count"], 10));
-
       const ctx = document.getElementById("infoCodeChart");
       if (ctx) {
+        Chart.register(ChartDataLabels);
         new Chart(ctx.getContext("2d"), {
           type: "bar",
           data: {
             labels: labels,
-            datasets: [{
-              label: "Count",
-              data: counts,
-              backgroundColor: "#f87171"
-            }]
+            datasets: [{ label: "Count", data: counts, backgroundColor: "#f87171" }]
           },
           options: {
             responsive: true,
-            scales: {
-              y: { beginAtZero: true }
-            },
+            scales: { y: { beginAtZero: true } },
             plugins: {
               legend: { display: false },
-              title: {
-                display: true,
-                text: "Info Codes (Bayou Liberty)",
-                font: { size: 16 }
-              },
-              tooltip: {
-                callbacks: {
-                  label: function(context) {
-                    return `Count: ${context.raw}`;
-                  }
-                }
+              title: { display: true, text: "Info Codes (Bayou Liberty)", font: { size: 16 } },
+              tooltip: { callbacks: { label: context => `Count: ${context.raw}` } },
+              datalabels: {
+                anchor: 'end',
+                align: 'top',
+                color: '#2c5782',
+                font: { weight: 'bold' },
+                formatter: (value) => value
               }
             }
           }
         });
       }
     },
-    error: function(err) {
-      console.error("Failed to parse info code CSV", err);
+    error: function(error) {
+      console.error("Failed to fetch info codes:", error);
+      document.getElementById("high-priority-codes").innerText = "Error loading codes";
     }
   });
 }
-document.addEventListener("DOMContentLoaded", renderInfoCodeChart);
-
-Chart.defaults.font.size = 12;
-
-new Chart(ctx.getContext("2d"), {
-  type: "bar",
-  data: {
-    labels: labels,
-    datasets: [{
-      label: "Count",
-      data: counts,
-      backgroundColor: "#f87171"
-    }]
-  },
-  options: {
-    responsive: true,
-    scales: {
-      y: { beginAtZero: true }
+document.addEventListener("DOMContentLoaded", function () {
+  var map = L.map('map').setView([30.286212, -89.818090], 14);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '© OpenStreetMap contributors'
+  }).addTo(map);
+  var greenIcon = L.divIcon({
+    className: 'custom-icon',
+    html: '<div style="background-color: #10b981; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white;"></div>',
+    iconSize: [20, 20],
+    iconAnchor: [10, 10]
+  });
+  var redIcon = L.divIcon({
+    className: 'custom-icon',
+    html: '<div style="background-color: #e11d48; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white;"></div>',
+    iconSize: [20, 20],
+    iconAnchor: [10, 10]
+  });
+  Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=96572475&single=true&output=csv", {
+    download: true,
+    header: true,
+    complete: function(results) {
+      const data = results.data;
+      console.log("Raw Data:", data);
+      const header = results.meta.fields;
+      console.log("Header Row:", header);
+      const issueIndex = header.indexOf("Collector Issue");
+      console.log("Collector Issue Index:", issueIndex);
+      const bayouLibertyCollectors = data.filter(row => row["City"]?.trim().toLowerCase() === "bayou liberty");
+      console.log("Bayou Liberty Collectors:", bayouLibertyCollectors);
+      var locations = [
+        [30.270882, -89.823255, "Water Tower"],
+        [30.301542, -89.812925, "Well #3"]
+      ];
+      locations.forEach(([lat, lon, name]) => {
+        const collector = bayouLibertyCollectors.find(row => row["Collector Name"]?.trim().toLowerCase() === name.toLowerCase());
+        const issueValue = collector ? collector["Collector Issue"]?.trim() : null;
+        const isOnline = issueValue === "No" || !collector || issueValue !== "Yes";
+        console.log(`Collector: ${name}, Issue: ${issueValue}, Online: ${isOnline}`);
+        if (!collector) {
+          console.warn(`Collector not found in Google Sheet: ${name}`);
+        }
+        const icon = isOnline ? greenIcon : redIcon;
+        L.marker([lat, lon], { icon: icon }).addTo(map).bindPopup(`${name}<br>Status: ${isOnline ? 'Online' : 'Offline'}`);
+      });
+      map.fitBounds(locations.map(([lat, lon]) => [lat, lon]), { padding: [30, 30], maxZoom: 14 });
     },
-    plugins: {
-      legend: { display: false },
-      title: {
-        display: true,
-        text: "Info Codes (Bayou Liberty)",
-        font: { size: 16 }
-      },
-      tooltip: {
-        callbacks: {
-          label: function(context) {
-            return `Count: ${context.raw}`;
-          }
-        }
-      },
-      datalabels: {
-        anchor: 'end',
-        align: 'top',
-        color: '#000',
-        font: {
-          weight: 'bold'
-        },
-        formatter: function(value) {
-          return value;
-        }
-      }
+    error: function(error) {
+      console.error("Failed to fetch collector data from Google Sheet:", error);
+      var locations = [
+        [30.270882, -89.823255, "Water Tower"],
+        [30.301542, -89.812925, "Well #3"]
+      ];
+      locations.forEach(([lat, lon, name]) => {
+        L.marker([lat, lon], { icon: greenIcon }).addTo(map).bindPopup(`${name}<br>Status: Online (Error)`);
+      });
+      map.fitBounds(locations.map(([lat, lon]) => [lat, lon]), { padding: [30, 30], maxZoom: 14 });
     }
-  },
-  plugins: [ChartDataLabels]
+  });
 });
+function updateCollectorTable() {
+  Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=96572475&single=true&output=csv", {
+    download: true,
+    header: true,
+    complete: function(results) {
+      const data = results.data;
+      const tableBody = document.querySelector(".info tbody");
+      tableBody.innerHTML = "";
+      const filtered = data.filter(row => row["City"]?.trim().toLowerCase() === "bayou liberty");
+      filtered.forEach(row => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${row["Collector Name"] || "N/A"}</td>
+          <td>${row["Serial Number"] || "N/A"}</td>
+          <td>${row["Last Contact"] || "N/A"}</td>
+          <td>${row["Comments"] || ""}</td>
+        `;
+        tableBody.appendChild(tr);
+      });
+    },
+    error: function(error) {
+      console.error("Failed to fetch collector table data:", error);
+      const tableBody = document.querySelector(".info tbody");
+      tableBody.innerHTML = "<tr><td colspan='4'>Error loading data</td></tr>";
+    }
+  });
+}
+document.addEventListener("DOMContentLoaded", updateCollectorStatus);
+document.addEventListener("DOMContentLoaded", updateReadingAndMissingData);
+document.addEventListener("DOMContentLoaded", renderInfoCodeChart);
+document.addEventListener("DOMContentLoaded", updateCollectorTable);
 </script>
 </body>
-
-
 </html>
