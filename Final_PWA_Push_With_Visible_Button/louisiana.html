@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Louisiana Collector Towers</title>
+<link href="https://unpkg.com/leaflet/dist/leaflet.css" rel="stylesheet"/>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js">L.marker([30.2783, -89.8018]).addTo(map).bindPopup(`<a href='bayou-liberty.html' target='_blank'>Bayou Liberty Tower</a>`);
+L.marker([31.0552, -92.1182]).addTo(map).bindPopup(`<a href='hessmer.html' target='_blank'>Hessmer Tower</a>`);
+L.marker([32.7915, -93.0557]).addTo(map).bindPopup(`<a href='homer.html' target='_blank'>Homer Tower</a>`);
+L.marker([30.2266, -93.2174]).addTo(map).bindPopup(`<a href='lake-charles.html' target='_blank'>Lake Charles Tower</a>`);
+L.marker([32.5252, -93.7502]).addTo(map).bindPopup(`<a href='shreveport.html' target='_blank'>Shreveport Tower</a>`);
+L.marker([29.9069, -90.1423]).addTo(map).bindPopup(`<a href='westwego.html' target='_blank'>Westwego Tower</a>`);
+  </script>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f4f4f4;
+    margin: 0;
+    padding: 40px;
+    color: #2c5782;
+    text-align: center;
+  }
+  header {
+    background-color: #2c5782;
+    padding: 12px 20px;
+    color: white;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+    font-size: 1.1em;
+  }
+  nav a {
+    color: white;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s ease;
+  }
+  nav a:hover {
+    text-decoration: underline;
+  }
+  h1 {
+    font-size: 1.7em;
+    margin-bottom: 20px;
+  }
+  .info {
+    font-size: 1.1em;
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    display: inline-block;
+    margin-bottom: 20px;
+    overflow-x: auto;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  th, td {
+    border: 1px solid #000;
+    padding: 8px;
+    text-align: center;
+  }
+  th {
+    background-color: #e0e0e0;
+  }
+  #map {
+    height: 400px;
+    width: 100%;
+    max-width: 800px;
+    margin: 20px auto;
+    border-radius: 10px;
+  }
+  .city-card {
+    width: 200px;
+    height: 200px;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-size: 1em;
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    margin: 10px;
+  }
+  .city-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+  }
+  canvas.donut {
+    max-width: 80px;
+    max-height: 80px;
+    margin-top: 8px;
+  }
+  .performance-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 24px;
+    padding: 30px 20px;
+  }
+
+  @media screen and (max-width: 600px) {
+    body {
+      padding: 20px;
+    }
+    .city-card {
+      width: 140px;
+      height: 140px;
+      font-size: 0.8em;
+    }
+    canvas.donut {
+      max-width: 60px;
+      max-height: 60px;
+    }
+    table {
+      font-size: 0.9em;
+    }
+    h1 {
+      font-size: 1.4em;
+    }
+    nav {
+      flex-direction: column;
+      gap: 10px;
+    }
+  }
+</style>
+<link href="manifest.json" rel="manifest"/></head>
+<body>
+<header style="background-color: #2c5782; padding: 10px 20px; color: white; text-align: center;">
+<nav style="display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; font-size: 1em;">
+<a href="index.html" style="color: white; text-decoration: none; font-weight: bold;">Home</a>
+<a href="louisiana.html" style="color: white; text-decoration: none;">Louisiana</a>
+<a href="bayou-liberty.html" style="color: white; text-decoration: none;">Bayou Liberty</a>
+<a href="hessmer.html" style="color: white; text-decoration: none;">Hessmer</a>
+<a href="homer.html" style="color: white; text-decoration: none;">Homer</a>
+<a href="lake-charles.html" style="color: white; text-decoration: none;">Lake Charles</a>
+<a href="shreveport.html" style="color: white; text-decoration: none;">Shreveport</a>
+<a href="westwego.html" style="color: white; text-decoration: none;">Westwego</a>
+</nav>
+</header>
+<h1>Louisiana Collector Tower Information</h1>
+<div class="info">
+<p>Click pins to see collector locations. More tower status data coming soon.</p>
+<div id="map"></div>
+<p><a href="index.html" style="color:#2c5782; text-decoration: underline;">← Back to Dashboard</a></p>
+</div>
+<script>
+    var map = L.map('map').setView([31.2, -92.1], 7);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: 'Map data © <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
+    }).addTo(map);
+    L.marker([30.2783, -89.8018]).addTo(map).bindPopup("Bayou Liberty");
+L.marker([31.0552, -92.1182]).addTo(map).bindPopup("Hessmer");
+L.marker([32.7915, -93.0557]).addTo(map).bindPopup("Homer");
+L.marker([30.2266, -93.2174]).addTo(map).bindPopup("Lake Charles");
+L.marker([32.5252, -93.7502]).addTo(map).bindPopup("Shreveport");
+L.marker([29.9069, -90.1423]).addTo(map).bindPopup("Westwego");
+  L.marker([30.2783, -89.8018]).addTo(map).bindPopup(`<a href='bayou-liberty.html' target='_blank'>Bayou Liberty Tower</a>`);
+L.marker([31.0552, -92.1182]).addTo(map).bindPopup(`<a href='hessmer.html' target='_blank'>Hessmer Tower</a>`);
+L.marker([32.7915, -93.0557]).addTo(map).bindPopup(`<a href='homer.html' target='_blank'>Homer Tower</a>`);
+L.marker([30.2266, -93.2174]).addTo(map).bindPopup(`<a href='lake-charles.html' target='_blank'>Lake Charles Tower</a>`);
+L.marker([32.5252, -93.7502]).addTo(map).bindPopup(`<a href='shreveport.html' target='_blank'>Shreveport Tower</a>`);
+L.marker([29.9069, -90.1423]).addTo(map).bindPopup(`<a href='westwego.html' target='_blank'>Westwego Tower</a>`);
+  </script>
+<script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('service-worker.js');
+            });
+        }
+        </script></body>
+</html>
