@@ -37,39 +37,7 @@
         }
         return gk_fileData[filename] || "";
         }
-        </script><script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileTitleData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileTitleData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex));
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileTitleData[filename] || "";
-        }
-</script>
-<!DOCTYPE html>
+        </script><!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
@@ -249,7 +217,7 @@ function updateReadingAndMissingData() {
   });
 }
 function renderInfoCodeChart() {
-  Papa.parse("https://docs.google.com/spreadsheets/d/placeholder-shreveport-info-codes/pub?gid=1198809600&single=true&output=csv", {
+  Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vRTRo4xkGtovrfc4G06Z6EvQt7rJOLXdO7vrcHPXw13czYG6ftF3h8B5R8doEIk3ysKxd5rIXotbYzk/pub?gid=1739203970&single=true&output=csv", {
     download: true,
     header: true,
     complete: function(results) {
@@ -290,11 +258,8 @@ function renderInfoCodeChart() {
     }
   });
 }
-document.addEventListener("DOMContentLoaded", updateCollectorStatus);
-document.addEventListener("DOMContentLoaded", updateReadingAndMissingData);
-document.addEventListener("DOMContentLoaded", renderInfoCodeChart);
 document.addEventListener("DOMContentLoaded", function () {
-  var map = L.map('map').setView([32.5252, -93.7502], 13);
+  var map = L.map('map').setView([32.5252, -93.7502], 14);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '© OpenStreetMap contributors'
@@ -347,7 +312,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const icon = isOnline ? greenIcon : redIcon;
         L.marker([lat, lon], { icon: icon }).addTo(map).bindPopup(`${name}<br>Status: ${isOnline ? 'Online' : 'Offline'}`);
       });
-      map.fitBounds(locations.map(([lat, lon]) => [lat, lon]), { padding: [30, 30], maxZoom: 11 });
+      map.fitBounds(locations.map(([lat, lon]) => [lat, lon]), { padding: [30, 30], maxZoom: 14 });
     },
     error: function(error) {
       console.error("Failed to fetch collector data from Google Sheet:", error);
@@ -367,7 +332,7 @@ document.addEventListener("DOMContentLoaded", function () {
       locations.forEach(([lat, lon, name]) => {
         L.marker([lat, lon], { icon: greenIcon }).addTo(map).bindPopup(`${name}<br>Status: Online (Error)`);
       });
-      map.fitBounds(locations.map(([lat, lon]) => [lat, lon]), { padding: [30, 30], maxZoom: 11 });
+      map.fitBounds(locations.map(([lat, lon]) => [lat, lon]), { padding: [30, 30], maxZoom: 14 });
     }
   });
 });
@@ -403,6 +368,5 @@ document.addEventListener("DOMContentLoaded", updateReadingAndMissingData);
 document.addEventListener("DOMContentLoaded", renderInfoCodeChart);
 document.addEventListener("DOMContentLoaded", updateCollectorTable);
 </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93c1f03a6983bd00',t:'MTc0NjYzMzcxMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
 </body>
 </html>
