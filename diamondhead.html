@@ -124,14 +124,9 @@
 <header>
   <nav>
     <a href="index.html">Home</a>
-    <a href="louisiana.html">Louisiana</a>
+    <a href="mississippi.html">Mississippi</a>
     <a href="columbus.html">Columbus</a>
     <a href="diamondhead.html">Diamondhead</a>
-    <a href="hessmer.html">Hessmer</a>
-    <a href="homer.html">Homer</a>
-    <a href="lake-charles.html">Lake Charles</a>
-    <a href="shreveport.html">Shreveport</a>
-    <a href="westwego.html">Westwego</a>
   </nav>
 </header>
 <h1>Diamondhead, MS - Dashboard</h1>
@@ -290,8 +285,8 @@ document.addEventListener("DOMContentLoaded", function () {
       const diamondheadCollectors = data.filter(row => row["City"]?.trim().toLowerCase() === "diamondhead");
       console.log("Diamondhead Collectors:", diamondheadCollectors);
       var locations = [
-        [30.375367, -89.370803, "Water Tower Main Unit"],
-        [30.375467, -89.370803, "Backup Unit"]
+        [30.375367, -89.370803, "Water Tank"],
+        [30.375467, -89.370803, "Water Tank Backup"]
       ];
       locations.forEach(([lat, lon, name]) => {
         const collector = diamondheadCollectors.find(row => row["Collector Name"]?.trim().toLowerCase() === name.toLowerCase());
@@ -309,8 +304,8 @@ document.addEventListener("DOMContentLoaded", function () {
     error: function(error) {
       console.error("Failed to fetch collector data from Google Sheet:", error);
       var locations = [
-        [30.375367, -89.370803, "Water Tower Main Unit"],
-        [30.375467, -89.370803, "Backup Unit"]
+        [30.375367, -89.370803, "Water Tank"],
+        [30.375467, -89.370803, "Water Tank Backup"]
       ];
       locations.forEach(([lat, lon, name]) => {
         L.marker([lat, lon], { icon: greenIcon }).addTo(map).bindPopup(`${name}<br>Status: Online (Error)`);
