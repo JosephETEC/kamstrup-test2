@@ -37,47 +37,7 @@
         }
         return gk_fileData[filename] || "";
         }
-        </script><script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileTitleData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileTitleData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileTitleData[filename] || "";
-        }
-</script>
-<!DOCTYPE html>
+        </script><!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
@@ -149,13 +109,74 @@
       margin: 20px 0;
       border-radius: 10px;
     }
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+      overflow: auto;
+    }
+    .modal-content {
+      background-color: #fff;
+      margin: 15% auto;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      width: 80%;
+      max-width: 400px;
+      text-align: center;
+    }
+    .modal-content h3 {
+      margin: 0 0 15px;
+      color: #2c5782;
+    }
+    .modal-content button {
+      padding: 10px 20px;
+      margin: 5px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1em;
+      transition: background-color 0.2s;
+    }
+    .modal-content .on-btn {
+      background-color: #10b981;
+      color: white;
+    }
+    .modal-content .on-btn:hover {
+      background-color: #059669;
+    }
+    .modal-content .off-btn {
+      background-color: #e11d48;
+      color: white;
+    }
+    .modal-content .off-btn:hover {
+      background-color: #be123c;
+    }
+    .modal-content .close-btn {
+      background-color: #6b7280;
+      color: white;
+    }
+    .modal-content .close-btn:hover {
+      background-color: #4b5563;
+    }
+    .modal-content p.status {
+      margin: 10px 0;
+      font-size: 0.9em;
+      color: #2c5782;
+    }
     @media screen and (max-width: 600px) {
       nav { flex-direction: column; gap: 8px; }
       h1 { font-size: 1.3em; }
       table { font-size: 0.85em; }
+      .modal-content { width: 90%; margin: 20% auto; }
     }
     @media print {
-      header, nav, .nav-toggle { display: none !important; }
+      header, nav, .nav-toggle, .modal { display: none !important; }
       div[style*="box-shadow"], .info { box-shadow: none !important; }
     }
   </style>
@@ -204,10 +225,51 @@
   <p id="high-priority-codes" style="font-size: 1.6em; margin: 10px 0; color: #b91c1c;"></p>
   <canvas id="infoCodeChart" height="120" style="margin-top: 10px;"></canvas>
 </div>
+<!-- Modal for Shelly Control -->
+<div id="shellyModal" class="modal">
+  <div class="modal-content">
+    <h3 id="modalCollectorName">Collector Name</h3>
+    <p class="status" id="modalStatus">Status: Loading...</p>
+    <button class="on-btn" onclick="toggleShelly('on')">Turn On</button>
+    <button class="off-btn" onclick="toggleShelly('off')">Turn Off</button>
+    <button class="close-btn" onclick="closeModal()">Close</button>
+  </div>
+</div>
 <div style="margin-top: 30px;">
   <a href="louisiana.html" style="display:inline-block;padding:10px 20px;background:#2c5782;color:white;text-decoration:none;border-radius:5px;">← Back to Louisiana Collectors</a>
 </div>
 <script>
+var gk_isXlsx = false;
+var gk_xlsxFileLookup = {};
+var gk_fileData = {};
+var gk_fileTitleData = {};
+function filledCell(cell) {
+  return cell !== '' && cell != null;
+}
+function loadFileData(filename) {
+  if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+    try {
+      var workbook = XLSX.read(gk_fileData[filename] || gk_fileTitleData[filename], { type: 'base64' });
+      var firstSheetName = workbook.SheetNames[0];
+      var worksheet = workbook.Sheets[firstSheetName];
+      var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+      var filteredData = jsonData.filter(row => row.some(filledCell));
+      var headerRowIndex = filteredData.findIndex((row, index) =>
+        row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+      );
+      if (headerRowIndex === -1 || headerRowIndex > 25) {
+        headerRowIndex = 0;
+      }
+      var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex));
+      csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+      return csv;
+    } catch (e) {
+      console.error(e);
+      return "";
+    }
+  }
+  return gk_fileData[filename] || gk_fileTitleData[filename] || "";
+}
 function updateCollectorStatus() {
   Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=96572475&single=true&output=csv", {
     download: true,
@@ -298,90 +360,6 @@ function renderInfoCodeChart() {
     }
   });
 }
-document.addEventListener("DOMContentLoaded", updateCollectorStatus);
-document.addEventListener("DOMContentLoaded", updateReadingAndMissingData);
-document.addEventListener("DOMContentLoaded", renderInfoCodeChart);
-document.addEventListener("DOMContentLoaded", function () {
-  var map = L.map('map').setView([30.2266, -93.2174], 13);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '© OpenStreetMap contributors'
-  }).addTo(map);
-
-  // Define custom icons for online (green) and offline (red) collectors
-  var greenIcon = L.divIcon({
-    className: 'custom-icon',
-    html: '<div style="background-color: #10b981; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white;"></div>',
-    iconSize: [20, 20],
-    iconAnchor: [10, 10]
-  });
-  var redIcon = L.divIcon({
-    className: 'custom-icon',
-    html: '<div style="background-color: #e11d48; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white;"></div>',
-    iconSize: [20, 20],
-    iconAnchor: [10, 10]
-  });
-
-  // Fetch collector data from the specified Google Sheet to determine status
-  Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=96572475&single=true&output=csv", {
-    download: true,
-    header: true,
-    complete: function(results) {
-      const data = results.data;
-      console.log("Raw Data:", data); // Debug: Log raw parsed data
-      const header = results.meta.fields;
-      console.log("Header Row:", header); // Debug: Log header row to confirm column names and indices
-      const issueIndex = header.indexOf("Collector Issue");
-      console.log("Collector Issue Index:", issueIndex); // Debug: Log the index of "Collector Issue"
-      const lakeCharlesCollectors = data.filter(row => row["City"]?.trim().toLowerCase() === "lake charles");
-      console.log("Lake Charles Collectors:", lakeCharlesCollectors); // Debug: Log all Lake Charles collectors
-
-      // Define locations with coordinates and names
-      var locations = [
-        [30.220558, -93.162325, "Main Street Tower"],
-        [30.205775, -93.236622, "Wastewater Plant"],
-        [30.249414, -93.194447, "Fire Station #3"],
-        [30.178947, -93.246383, "Alma Lane Water Plant"],
-        [30.162100, -93.282336, "Fire Station #8"],
-        [30.226611, -93.204167, "Police HQ"],
-        [30.199267, -93.212056, "Center Street WTP"]
-      ];
-
-      // Add markers with appropriate icons based on Issue status
-      locations.forEach(([lat, lon, name]) => {
-        const collector = lakeCharlesCollectors.find(row => row["Collector Name"]?.trim().toLowerCase() === name.toLowerCase());
-        const issueValue = collector ? collector["Collector Issue"]?.trim() : null; // Use header name instead of index
-        const isOnline = issueValue === "No" || !collector || issueValue !== "Yes"; // Online unless explicitly "Yes"
-        console.log(`Collector: ${name}, Issue: ${issueValue}, Online: ${isOnline}`); // Debug: Log each collector's status
-        if (!collector) {
-          console.warn(`Collector not found in Google Sheet: ${name}`);
-        }
-        const icon = isOnline ? greenIcon : redIcon;
-        L.marker([lat, lon], { icon: icon }).addTo(map).bindPopup(`${name}<br>Status: ${isOnline ? 'Online' : 'Offline'}`);
-      });
-
-      // Adjust map bounds
-      map.fitBounds(locations.map(([lat, lon]) => [lat, lon]), { padding: [30, 30], maxZoom: 11 });
-    },
-    error: function(error) {
-      console.error("Failed to fetch collector data from Google Sheet:", error);
-      // Fallback: Add markers with default online status
-      var locations = [
-        [30.220558, -93.162325, "Main Street Tower"],
-        [30.205775, -93.236622, "Wastewater Plant"],
-        [30.249414, -93.194447, "Fire Station #3"],
-        [30.178947, -93.246383, "Alma Lane Water Plant"],
-        [30.162100, -93.282336, "Fire Station #8"],
-        [30.226611, -93.204167, "Police HQ"],
-        [30.199267, -93.212056, "Center Street WTP"]
-      ];
-      locations.forEach(([lat, lon, name]) => {
-        L.marker([lat, lon], { icon: greenIcon }).addTo(map).bindPopup(`${name}<br>Status: Online (Error)`);
-      });
-      map.fitBounds(locations.map(([lat, lon]) => [lat, lon]), { padding: [30, 30], maxZoom: 11 });
-    }
-  });
-});
 function updateCollectorTable() {
   Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=96572475&single=true&output=csv", {
     download: true,
@@ -409,11 +387,180 @@ function updateCollectorTable() {
     }
   });
 }
-document.addEventListener("DOMContentLoaded", updateCollectorStatus);
-document.addEventListener("DOMContentLoaded", updateReadingAndMissingData);
-document.addEventListener("DOMContentLoaded", renderInfoCodeChart);
-document.addEventListener("DOMContentLoaded", updateCollectorTable);
+let currentCollector = null;
+const shellyIPs = {
+  "Main Street Tower": "192.168.1.101",
+  "Wastewater Plant": "192.168.1.102",
+  "Fire Station #3": "192.168.1.103",
+  "Alma Lane Water Plant": "192.168.1.104",
+  "Fire Station #8": "192.168.1.105",
+  "Police HQ": "192.168.1.106",
+  "Center Street WTP": "192.168.1.107"
+};
+async function getShellyStatus(ip) {
+  try {
+    const response = await fetch(`http://${ip}/rpc/Switch.GetStatus?id=0`, { mode: 'cors' });
+    const data = await response.json();
+    return data.output ? "On" : "Off";
+  } catch (error) {
+    console.error(`Failed to fetch Shelly status for ${ip}:`, error);
+    return "Unknown";
+  }
+}
+async function toggleShelly(state) {
+  if (!currentCollector) return;
+  const ip = shellyIPs[currentCollector];
+  if (!ip) {
+    document.getElementById("modalStatus").innerText = "Error: No Shelly IP configured";
+    return;
+  }
+  const statusEl = document.getElementById("modalStatus");
+  statusEl.innerText = "Sending command...";
+  try {
+    const response = await fetch(`http://${ip}/rpc/Switch.Set?id=0&on=${state === 'on'}`, { mode: 'cors' });
+    const data = await response.json();
+    if (data.restart_required) {
+      statusEl.innerText = "Command sent, device restarting";
+    } else {
+      const newStatus = await getShellyStatus(ip);
+      statusEl.innerText = `Status: ${newStatus}`;
+    }
+  } catch (error) {
+    console.error(`Failed to toggle Shelly for ${ip}:`, error);
+    statusEl.innerText = "Error: Failed to send command";
+  }
+}
+function showModal(collectorName, isOnline) {
+  currentCollector = collectorName;
+  const modal = document.getElementById("shellyModal");
+  const modalCollectorName = document.getElementById("modalCollectorName");
+  const modalStatus = document.getElementById("modalStatus");
+  modalCollectorName.innerText = collectorName;
+  modalStatus.innerText = "Status: Loading...";
+  modal.style.display = "block";
+  const ip = shellyIPs[collectorName];
+  if (ip) {
+    getShellyStatus(ip).then(status => {
+      modalStatus.innerText = `Status: ${status}`;
+    });
+  } else {
+    modalStatus.innerText = "Error: No Shelly IP configured";
+  }
+}
+function closeModal() {
+  const modal = document.getElementById("shellyModal");
+  modal.style.display = "none";
+  currentCollector = null;
+}
+function initializeMap() {
+  var map = L.map('map').setView([30.2266, -93.2174], 13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '© OpenStreetMap contributors'
+  }).addTo(map);
+  var greenIcon = L.divIcon({
+    className: 'custom-icon',
+    html: '<div style="background-color: #10b981; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white;"></div>',
+    iconSize: [20, 20],
+    iconAnchor: [10, 10]
+  });
+  var redIcon = L.divIcon({
+    className: 'custom-icon',
+    html: '<div style="background-color: #e11d48; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white;"></div>',
+    iconSize: [20, 20],
+    iconAnchor: [10, 10]
+  });
+  Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=96572475&single=true&output=csv", {
+    download: true,
+    header: true,
+    complete: function(results) {
+      const data = results.data;
+      console.log("Raw Google Sheet Data:", data);
+      const lakeCharlesCollectors = data.filter(row => row["City"]?.trim().toLowerCase() === "lake charles");
+      console.log("Lake Charles Collectors:", lakeCharlesCollectors);
+      var locations = [
+        [30.220558, -93.162325, "Main Street Tower"],
+        [30.205775, -93.236622, "Wastewater Plant"],
+        [30.249414, -93.194447, "Fire Station #3"],
+        [30.178947, -93.246383, "Alma Lane Water Plant"],
+        [30.162100, -93.282336, "Fire Station #8"],
+        [30.226611, -93.204167, "Police HQ"],
+        [30.199267, -93.212056, "Center Street WTP"]
+      ];
+      console.log("Processing Locations:", locations);
+      locations.forEach(([lat, lon, name], index) => {
+        console.log(`Processing Location #${index + 1}: ${name} at [${lat}, ${lon}]`);
+        const collector = lakeCharlesCollectors.find(row => row["Collector Name"]?.trim().toLowerCase() === name.toLowerCase());
+        const issueValue = collector ? collector["Collector Issue"]?.trim() : null;
+        const isOnline = issueValue === "No" || !collector || issueValue !== "Yes";
+        if (!collector) {
+          console.warn(`Collector not found in Google Sheet for: ${name}`);
+        }
+        console.log(`Collector: ${name}, Issue: ${issueValue}, Online: ${isOnline}`);
+        const icon = isOnline ? greenIcon : redIcon;
+        const popupContent = `
+          <b>${name}</b><br>
+          Status: ${isOnline ? 'Online' : 'Offline'}<br>
+          <button onclick="showModal('${name}', ${isOnline})">Control Shelly</button>
+        `;
+        try {
+          const marker = L.marker([lat, lon], { icon: icon }).addTo(map).bindPopup(popupContent);
+          console.log(`Marker added for ${name}`);
+        } catch (error) {
+          console.error(`Failed to add marker for ${name}:`, error);
+        }
+      });
+      try {
+        map.fitBounds(locations.map(([lat, lon]) => [lat, lon]), { padding: [30, 30], maxZoom: 11 });
+        console.log("Map bounds adjusted");
+      } catch (error) {
+        console.error("Failed to adjust map bounds:", error);
+      }
+    },
+    error: function(error) {
+      console.error("Failed to fetch collector data from Google Sheet:", error);
+      var locations = [
+        [30.220558, -93.162325, "Main Street Tower"],
+        [30.205775, -93.236622, "Wastewater Plant"],
+        [30.249414, -93.194447, "Fire Station #3"],
+        [30.178947, -93.246383, "Alma Lane Water Plant"],
+        [30.162100, -93.282336, "Fire Station #8"],
+        [30.226611, -93.204167, "Police HQ"],
+        [30.199267, -93.212056, "Center Street WTP"]
+      ];
+      console.log("Using fallback locations:", locations);
+      locations.forEach(([lat, lon, name], index) => {
+        console.log(`Processing Fallback Location #${index + 1}: ${name} at [${lat}, ${lon}]`);
+        const popupContent = `
+          <b>${name}</b><br>
+          Status: Online (Error)<br>
+          <button onclick="showModal('${name}', true)">Control Shelly</button>
+        `;
+        try {
+          const marker = L.marked([lat, lon], { icon: greenIcon }).addTo(map).bindPopup(popupContent);
+          console.log(`Fallback marker added for ${name}`);
+        } catch (error) {
+          console.error(`Failed to add fallback marker for ${name}:`, error);
+        }
+      });
+      try {
+        map.fitBounds(locations.map(([lat, lon]) => [lat, lon]), { padding: [30, 30], maxZoom: 11 });
+        console.log("Fallback map bounds adjusted");
+      } catch (error) {
+        console.error("Failed to adjust fallback map bounds:", error);
+      }
+    }
+  });
+}
+document.addEventListener("DOMContentLoaded", function() {
+  initializeMap();
+  updateCollectorStatus();
+  updateReadingAndMissingData();
+  renderInfoCodeChart();
+  updateCollectorTable();
+});
 </script>
 <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93c1f03a6983bd00',t:'MTc0NjYzMzcxMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93eb2c84fd40bff1',t:'MTc0NzA2NjA5Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
 </body>
 </html>
