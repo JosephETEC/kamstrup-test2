@@ -43,11 +43,12 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Lake Charles, LA - Dashboard</title>
-  <link href="https://unpkg.com/leaflet/dist/leaflet.css" rel="stylesheet" />
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+  <!-- Mapbox dependencies -->
+  <link href="https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.css" rel="stylesheet" />
+  <script src="https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.js"></script>
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -184,6 +185,20 @@
       height: 400px;
       width: 100%;
       border-radius: 10px;
+    }
+    .custom-icon-online {
+      background-color: #10b981;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2px solid white;
+    }
+    .custom-icon-offline {
+      background-color: #e11d48;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2px solid white;
     }
     @media screen and (max-width: 600px) {
       nav { flex-direction: column; gap: 8px; }
@@ -516,14 +531,13 @@ function closeModal() {
 }
 async function geocodeAddress(address, city, zipCode) {
   const query = encodeURIComponent(`${address}, ${city}, LA ${zipCode}`);
-  const url = `https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1`;
+  const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${query}.json?access_token=pk.eyJ1Ijoiam9zZXBoLWhlYmVydCIsImEiOiJjbWFsaXlyMWEwOXByMm5vcTcwNXluZDFmIn0.IcFUYqDiW9phV6OYZbISjw`;
   try {
-    const response = await fetch(url, {
-      headers: { 'User-Agent': 'LakeCharlesDashboard/1.0 (contact: your-email@example.com)' }
-    });
+    const response = await fetch(url);
     const data = await response.json();
-    if (data.length > 0) {
-      return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
+    if (data.features && data.features.length > 0) {
+      const [lon, lat] = data.features[0].geometry.coordinates;
+      return { lat, lon };
     }
     return null;
   } catch (error) {
@@ -533,26 +547,28 @@ async function geocodeAddress(address, city, zipCode) {
 }
 let meterMapInstance = null;
 async function showMeterMapModal(infoCode) {
-  console.log(`Opening map modal for info code: ${infoCode}`);
+  console.log(`Opening meter map modal for info code: ${infoCode}`);
   const modal = document.getElementById("meterMapModal");
   const title = document.getElementById("meterMapTitle");
   title.innerText = `Meters with Info Code ${infoCode}`;
   modal.style.display = "block";
 
-  // If a previous map exists, remove it
+  // Clean up previous map
   if (meterMapInstance) {
     meterMapInstance.remove();
     meterMapInstance = null;
   }
 
-  // Initialize new map
+  // Initialize new Mapbox map
   const mapContainer = document.getElementById("meterMap");
   mapContainer.innerHTML = "";
-  meterMapInstance = L.map('meterMap').setView([30.2266, -93.2174], 13);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '© OpenStreetMap contributors'
-  }).addTo(meterMapInstance);
+  mapboxgl.accessToken = 'pk.eyJ1Ijoiam9zZXBoLWhlYmVydCIsImEiOiJjbWFsaXlyMWEwOXByMm5vcTcwNXluZDFmIn0.IcFUYqDiW9phV6OYZbISjw';
+  meterMapInstance = new mapboxgl.Map({
+    container: 'meterMap',
+    style: 'mapbox://styles/mapbox/streets-v12',
+    center: [-93.2174, 30.2266], // Lake Charles
+    zoom: 12
+  });
 
   // Fetch meter data
   Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQIA7LGRH_4JfIMDaHhp12-DhSD37xexpulbwumfFDBoA9rF8y6RtgepNxeO1EkRS_t0UtVzG8cFsFc/pub?gid=63920378&single=true&output=csv", {
@@ -560,7 +576,7 @@ async function showMeterMapModal(infoCode) {
     header: true,
     complete: async function(results) {
       console.log("Raw meter data:", results.data);
-      // Log all unique info codes in the sheet
+      // Log all unique info codes
       const allInfoCodes = new Set();
       results.data.forEach(row => {
         const infoCodes = row["Info code"]?.trim().split(',').map(code => code.trim()).filter(code => code);
@@ -575,7 +591,10 @@ async function showMeterMapModal(infoCode) {
       console.log(`Filtered data for ${infoCode}:`, data);
       if (data.length === 0) {
         console.log("No meters found for this info code. Check console for unique info codes.");
-        L.marker([30.2266, -93.2174]).addTo(meterMapInstance).bindPopup("No meters found for this info code. Check console for details.");
+        new mapboxgl.Marker()
+          .setLngLat([-93.2174, 30.2266])
+          .setPopup(new mapboxgl.Popup().setHTML("No meters found for this info code. Check console for details."))
+          .addTo(meterMapInstance);
         return;
       }
 
@@ -591,12 +610,15 @@ async function showMeterMapModal(infoCode) {
         if (address && city && zipCode) {
           const coords = await geocodeAddress(address, city, zipCode);
           if (coords) {
-            locations.push({ lat: coords.lat, lon: coords.lon });
-            L.marker([coords.lat, coords.lon]).addTo(meterMapInstance).bindPopup(`
-              <b>Meter: ${serialNumber}</b><br>
-              Address: ${address}, ${city}, ${zipCode}<br>
-              Info Codes: ${infoCodes}
-            `);
+            locations.push([coords.lon, coords.lat]);
+            new mapboxgl.Marker()
+              .setLngLat([coords.lon, coords.lat])
+              .setPopup(new mapboxgl.Popup().setHTML(`
+                <b>Meter: ${serialNumber}</b><br>
+                Address: ${address}, ${city}, ${zipCode}<br>
+                Info Codes: ${infoCodes}
+              `))
+              .addTo(meterMapInstance);
             console.log(`Added pin for ${serialNumber} at [${coords.lat}, ${coords.lon}]`);
           } else {
             console.log(`Geocoding failed for ${address}, ${city}, ${zipCode}`);
@@ -604,55 +626,53 @@ async function showMeterMapModal(infoCode) {
         } else {
           console.log(`Skipping meter ${serialNumber}: Missing address, city, or zip code`);
         }
-        // Delay to respect Nominatim's 1 request/second limit
+        // Delay for Mapbox geocoding
         if (i < data.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          await new Promise(resolve => setTimeout(resolve, 100));
         }
       }
 
       if (locations.length > 0) {
-        meterMapInstance.fitBounds(locations.map(loc => [loc.lat, loc.lon]), { padding: [30, 30], maxZoom: 15 });
+        const bounds = locations.reduce((bounds, coord) => {
+          return bounds.extend(coord);
+        }, new mapboxgl.LngLatBounds(locations[0], locations[0]));
+        meterMapInstance.fitBounds(bounds, { padding: 30, maxZoom: 15 });
         console.log("Map bounds adjusted to fit locations:", locations);
       } else {
         console.log("No valid locations found.");
-        L.marker([30.2266, -93.2174]).addTo(meterMapInstance).bindPopup("No valid locations found. Check console for geocoding issues.");
+        new mapboxgl.Marker()
+          .setLngLat([-93.2174, 30.2266])
+          .setPopup(new mapboxgl.Popup().setHTML("No valid locations found. Check console for geocoding issues."))
+          .addTo(meterMapInstance);
       }
     },
     error: function(error) {
       console.error("Failed to fetch meter data:", error);
-      L.marker([30.2266, -93.2174]).addTo(meterMapInstance).bindPopup("Error loading meter data.");
+      new mapboxgl.Marker()
+        .setLngLat([-93.2174, 30.2266])
+        .setPopup(new mapboxgl.Popup().setHTML("Error loading meter data."))
+        .addTo(meterMapInstance);
     }
   });
 }
 function closeMeterMapModal() {
   const modal = document.getElementById("meterMapModal");
   modal.style.display = "none";
-  // Clean up the map instance
   if (meterMapInstance) {
     meterMapInstance.remove();
     meterMapInstance = null;
   }
-  // Clear the container
   document.getElementById("meterMap").innerHTML = "";
 }
 function initializeMap() {
-  var map = L.map('map').setView([30.2266, -93.2174], 13);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '© OpenStreetMap contributors'
-  }).addTo(map);
-  var greenIcon = L.divIcon({
-    className: 'custom-icon',
-    html: '<div style="background-color: #10b981; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white;"></div>',
-    iconSize: [20, 20],
-    iconAnchor: [10, 10]
+  mapboxgl.accessToken = 'pk.eyJ1Ijoiam9zZXBoLWhlYmVydCIsImEiOiJjbWFsaXlyMWEwOXByMm5vcTcwNXluZDFmIn0.IcFUYqDiW9phV6OYZbISjw';
+  const map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/mapbox/streets-v12',
+    center: [-93.2174, 30.2266], // Lake Charles
+    zoom: 12
   });
-  var redIcon = L.divIcon({
-    className: 'custom-icon',
-    html: '<div style="background-color: #e11d48; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white;"></div>',
-    iconSize: [20, 20],
-    iconAnchor: [10, 10]
-  });
+
   Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=96572475&single=true&output=csv", {
     download: true,
     header: true,
@@ -670,7 +690,7 @@ function initializeMap() {
         }
       });
       console.log("Shelly Cloud Config:", shellyCloudConfig);
-      var locations = [
+      const locations = [
         [30.220558, -93.162325, "Main Street Tower"],
         [30.205775, -93.236622, "Wastewater Plant"],
         [30.249414, -93.194447, "Fire Station #3"],
@@ -689,21 +709,28 @@ function initializeMap() {
           console.warn(`Collector not found in Google Sheet for: ${name}`);
         }
         console.log(`Collector: ${name}, Issue: ${issueValue}, Online: ${isOnline}`);
-        const icon = isOnline ? greenIcon : redIcon;
+        const markerEl = document.createElement('div');
+        markerEl.className = isOnline ? 'custom-icon-online' : 'custom-icon-offline';
         const popupContent = `
           <b>${name}</b><br>
           Status: ${isOnline ? 'Online' : 'Offline'}<br>
           <button onclick="showModal('${name}', ${isOnline})">Control Shelly</button>
         `;
         try {
-          const marker = L.marker([lat, lon], { icon: icon }).addTo(map).bindPopup(popupContent);
+          new mapboxgl.Marker({ element: markerEl })
+            .setLngLat([lon, lat])
+            .setPopup(new mapboxgl.Popup().setHTML(popupContent))
+            .addTo(map);
           console.log(`Marker added for ${name}`);
         } catch (error) {
           console.error(`Failed to add marker for ${name}:`, error);
         }
       });
       try {
-        map.fitBounds(locations.map(([lat, lon]) => [lat, lon]), { padding: [30, 30], maxZoom: 11 });
+        const bounds = locations.reduce((bounds, [lat, lon]) => {
+          return bounds.extend([lon, lat]);
+        }, new mapboxgl.LngLatBounds([locations[0][1], locations[0][0]], [locations[0][1], locations[0][0]]));
+        map.fitBounds(bounds, { padding: 30, maxZoom: 11 });
         console.log("Map bounds adjusted");
       } catch (error) {
         console.error("Failed to adjust map bounds:", error);
@@ -711,7 +738,7 @@ function initializeMap() {
     },
     error: function(error) {
       console.error("Failed to fetch collector data from Google Sheet:", error);
-      var locations = [
+      const locations = [
         [30.220558, -93.162325, "Main Street Tower"],
         [30.205775, -93.236622, "Wastewater Plant"],
         [30.249414, -93.194447, "Fire Station #3"],
@@ -723,20 +750,28 @@ function initializeMap() {
       console.log("Using fallback locations:", locations);
       locations.forEach(([lat, lon, name], index) => {
         console.log(`Processing Fallback Location #${index + 1}: ${name} at [${lat}, ${lon}]`);
+        const markerEl = document.createElement('div');
+        markerEl.className = 'custom-icon-online';
         const popupContent = `
           <b>${name}</b><br>
           Status: Online (Error)<br>
           <button onclick="showModal('${name}', true)">Control Shelly</button>
         `;
         try {
-          const marker = L.marker([lat, lon], { icon: greenIcon }).addTo(map).bindPopup(popupContent);
+          new mapboxgl.Marker({ element: markerEl })
+            .setLngLat([lon, lat])
+            .setPopup(new mapboxgl.Popup().setHTML(popupContent))
+            .addTo(map);
           console.log(`Fallback marker added for ${name}`);
         } catch (error) {
           console.error(`Failed to add fallback marker for ${name}:`, error);
         }
       });
       try {
-        map.fitBounds(locations.map(([lat, lon]) => [lat, lon]), { padding: [30, 30], maxZoom: 11 });
+        const bounds = locations.reduce((bounds, [lat, lon]) => {
+          return bounds.extend([lon, lat]);
+        }, new mapboxgl.LngLatBounds([locations[0][1], locations[0][0]], [locations[0][1], locations[0][0]]));
+        map.fitBounds(bounds, { padding: 30, maxZoom: 11 });
         console.log("Fallback map bounds adjusted");
       } catch (error) {
         console.error("Failed to adjust fallback map bounds:", error);
