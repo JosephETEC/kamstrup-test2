@@ -531,27 +531,45 @@ async function geocodeAddress(address, city, zipCode) {
     return null;
   }
 }
+let meterMapInstance = null;
 async function showMeterMapModal(infoCode) {
+  console.log(`Opening map modal for info code: ${infoCode}`);
   const modal = document.getElementById("meterMapModal");
   const title = document.getElementById("meterMapTitle");
   title.innerText = `Meters with Info Code ${infoCode}`;
   modal.style.display = "block";
 
-  // Initialize map
-  const map = L.map('meterMap').setView([30.2266, -93.2174], 13);
+  // If a previous map exists, remove it
+  if (meterMapInstance) {
+    meterMapInstance.remove();
+    meterMapInstance = null;
+  }
+
+  // Initialize new map
+  const mapContainer = document.getElementById("meterMap");
+  // Ensure the container is clear
+  mapContainer.innerHTML = "";
+  meterMapInstance = L.map('meterMap').setView([30.2266, -93.2174], 13);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '© OpenStreetMap contributors'
-  }).addTo(map);
+  }).addTo(meterMapInstance);
 
   // Fetch meter data
   Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQIA7LGRH_4JfIMDaHhp12-DhSD37xexpulbwumfFDBoA9rF8y6RtgepNxeO1EkRS_t0UtVzG8cFsFc/pub?gid=63920378&single=true&output=csv", {
     download: true,
     header: true,
     complete: async function(results) {
-      const data = results.data.filter(row => row["Info code"]?.trim() === infoCode);
+      console.log("Raw meter data:", results.data);
+      const data = results.data.filter(row => {
+        const infoCodes = row["Info code"]?.trim().split(',').map(code => code.trim()).filter(code => code);
+        console.log(`Row info codes: ${infoCodes}, Checking for: ${infoCode}`);
+        return infoCodes && infoCodes.includes(infoCode);
+      });
+      console.log(`Filtered data for ${infoCode}:`, data);
       if (data.length === 0) {
-        L.marker([30.2266, -93.2174]).addTo(map).bindPopup("No meters found for this info code.");
+        console.log("No meters found for this info code.");
+        L.marker([30.2266, -93.2174]).addTo(meterMapInstance).bindPopup("No meters found for this info code.");
         return;
       }
 
@@ -562,16 +580,23 @@ async function showMeterMapModal(infoCode) {
         const city = row["City"]?.trim();
         const zipCode = row["ZIP code"]?.trim();
         const serialNumber = row["Serial number"]?.trim() || "N/A";
+        const infoCodes = row["Info code"]?.trim() || "N/A";
+        console.log(`Processing meter ${serialNumber} at ${address}, ${city}, ${zipCode}`);
         if (address && city && zipCode) {
           const coords = await geocodeAddress(address, city, zipCode);
           if (coords) {
             locations.push({ lat: coords.lat, lon: coords.lon });
-            L.marker([coords.lat, coords.lon]).addTo(map).bindPopup(`
+            L.marker([coords.lat, coords.lon]).addTo(meterMapInstance).bindPopup(`
               <b>Meter: ${serialNumber}</b><br>
               Address: ${address}, ${city}, ${zipCode}<br>
-              Info Code: ${infoCode}
+              Info Codes: ${infoCodes}
             `);
+            console.log(`Added pin for ${serialNumber} at [${coords.lat}, ${coords.lon}]`);
+          } else {
+            console.log(`Geocoding failed for ${address}, ${city}, ${zipCode}`);
           }
+        } else {
+          console.log(`Skipping meter ${serialNumber}: Missing address, city, or zip code`);
         }
         // Delay to respect Nominatim's 1 request/second limit
         if (i < data.length - 1) {
@@ -580,21 +605,28 @@ async function showMeterMapModal(infoCode) {
       }
 
       if (locations.length > 0) {
-        map.fitBounds(locations.map(loc => [loc.lat, loc.lon]), { padding: [30, 30], maxZoom: 15 });
+        meterMapInstance.fitBounds(locations.map(loc => [loc.lat, loc.lon]), { padding: [30, 30], maxZoom: 15 });
+        console.log("Map bounds adjusted to fit locations:", locations);
       } else {
-        L.marker([30.2266, -93.2174]).addTo(map).bindPopup("No valid locations found.");
+        console.log("No valid locations found.");
+        L.marker([30.2266, -93.2174]).addTo(meterMapInstance).bindPopup("No valid locations found.");
       }
     },
     error: function(error) {
       console.error("Failed to fetch meter data:", error);
-      L.marker([30.2266, -93.2174]).addTo(map).bindPopup("Error loading meter data.");
+      L.marker([30.2266, -93.2174]).addTo(meterMapInstance).bindPopup("Error loading meter data.");
     }
   });
 }
 function closeMeterMapModal() {
   const modal = document.getElementById("meterMapModal");
   modal.style.display = "none";
-  // Remove map to prevent Leaflet issues
+  // Clean up the map instance
+  if (meterMapInstance) {
+    meterMapInstance.remove();
+    meterMapInstance = null;
+  }
+  // Clear the container
   document.getElementById("meterMap").innerHTML = "";
 }
 function initializeMap() {
