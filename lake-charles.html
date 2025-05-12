@@ -122,12 +122,12 @@
     }
     .modal-content {
       background-color: #fff;
-      margin: 10% auto;
+      margin: 5% auto;
       padding: 20px;
       border-radius: 10px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.2);
       width: 80%;
-      max-width: 400px;
+      max-width: 800px;
       text-align: center;
     }
     .modal-content h3 {
@@ -180,12 +180,18 @@
       font-size: 0.85em;
       color: #2c5782;
     }
+    #meterMap {
+      height: 400px;
+      width: 100%;
+      border-radius: 10px;
+    }
     @media screen and (max-width: 600px) {
       nav { flex-direction: column; gap: 8px; }
       h1 { font-size: 1.3em; }
       table { font-size: 0.85em; }
       .modal-content { width: 90%; margin: 15% auto; }
       .modal-content button { font-size: 0.8em; padding: 6px 12px; }
+      #meterMap { height: 300px; }
     }
     @media print {
       header, nav, .nav-toggle, .modal { display: none !important; }
@@ -254,6 +260,14 @@
       <button class="off-btn" onclick="toggleShelly('topBox', 'off')">Turn Off</button>
     </div>
     <button class="close-btn" onclick="closeModal()">Close</button>
+  </div>
+</div>
+<!-- Modal for Meter Map -->
+<div id="meterMapModal" class="modal">
+  <div class="modal-content">
+    <h3 id="meterMapTitle">Meters with Info Code</h3>
+    <div id="meterMap"></div>
+    <button class="close-btn" onclick="closeMeterMapModal()">Close</button>
   </div>
 </div>
 <div style="margin-top: 30px;">
@@ -370,6 +384,13 @@ function renderInfoCodeChart() {
                 font: { weight: 'bold' },
                 formatter: (value) => value
               }
+            },
+            onClick: (event, elements) => {
+              if (elements.length > 0) {
+                const index = elements[0].index;
+                const infoCode = labels[index];
+                showMeterMapModal(infoCode);
+              }
             }
           }
         });
@@ -411,7 +432,6 @@ function updateCollectorTable() {
 let currentCollector = null;
 let shellyCloudConfig = {};
 const shellyAuthToken = "your-shelly-cloud-auth-token"; // Replace with your Shelly Cloud API token
-
 async function getShellyStatus(collectorName, deviceType) {
   const config = shellyCloudConfig[collectorName];
   const deviceId = config && config[deviceType === 'main' ? 'mainPower' : 'topBoxPower'];
@@ -427,7 +447,6 @@ async function getShellyStatus(collectorName, deviceType) {
     return "Unknown";
   }
 }
-
 async function toggleShelly(deviceType, state) {
   if (!currentCollector) return;
   const config = shellyCloudConfig[currentCollector];
@@ -459,7 +478,6 @@ async function toggleShelly(deviceType, state) {
     statusEl.innerText = "Error: Failed to send command";
   }
 }
-
 function showModal(collectorName, isOnline) {
   currentCollector = collectorName;
   const modal = document.getElementById("shellyModal");
@@ -491,13 +509,94 @@ function showModal(collectorName, isOnline) {
     topBoxPowerStatus.innerText = "Error: No Shelly config";
   }
 }
-
 function closeModal() {
   const modal = document.getElementById("shellyModal");
   modal.style.display = "none";
   currentCollector = null;
 }
+async function geocodeAddress(address, city, zipCode) {
+  const query = encodeURIComponent(`${address}, ${city}, LA ${zipCode}`);
+  const url = `https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1`;
+  try {
+    const response = await fetch(url, {
+      headers: { 'User-Agent': 'LakeCharlesDashboard/1.0 (contact: your-email@example.com)' }
+    });
+    const data = await response.json();
+    if (data.length > 0) {
+      return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
+    }
+    return null;
+  } catch (error) {
+    console.error(`Geocoding failed for ${query}:`, error);
+    return null;
+  }
+}
+async function showMeterMapModal(infoCode) {
+  const modal = document.getElementById("meterMapModal");
+  const title = document.getElementById("meterMapTitle");
+  title.innerText = `Meters with Info Code ${infoCode}`;
+  modal.style.display = "block";
 
+  // Initialize map
+  const map = L.map('meterMap').setView([30.2266, -93.2174], 13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '© OpenStreetMap contributors'
+  }).addTo(map);
+
+  // Fetch meter data
+  Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQIA7LGRH_4JfIMDaHhp12-DhSD37xexpulbwumfFDBoA9rF8y6RtgepNxeO1EkRS_t0UtVzG8cFsFc/pub?gid=63920378&single=true&output=csv", {
+    download: true,
+    header: true,
+    complete: async function(results) {
+      const data = results.data.filter(row => row["Info code"]?.trim() === infoCode);
+      if (data.length === 0) {
+        L.marker([30.2266, -93.2174]).addTo(map).bindPopup("No meters found for this info code.");
+        return;
+      }
+
+      const locations = [];
+      for (let i = 0; i < data.length; i++) {
+        const row = data[i];
+        const address = row["Address"]?.trim();
+        const city = row["City"]?.trim();
+        const zipCode = row["ZIP code"]?.trim();
+        const serialNumber = row["Serial number"]?.trim() || "N/A";
+        if (address && city && zipCode) {
+          const coords = await geocodeAddress(address, city, zipCode);
+          if (coords) {
+            locations.push({ lat: coords.lat, lon: coords.lon });
+            L.marker([coords.lat, coords.lon]).addTo(map).bindPopup(`
+              <b>Meter: ${serialNumber}</b><br>
+              Address: ${address}, ${city}, ${zipCode}<br>
+              Info Code: ${infoCode}
+            `);
+          }
+        }
+        // Delay to respect Nominatim's 1 request/second limit
+        if (i < data.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
+
+      if (locations.length > 0) {
+        map.fitBounds(locations.map(loc => [loc.lat, loc.lon]), { padding: [30, 30], maxZoom: 15 });
+      } else {
+        L.marker([30.2266, -93.2174]).addTo(map).bindPopup("No valid locations found.");
+      }
+    },
+    error: function(error) {
+      console.error("Failed to fetch meter data:", error);
+      L.marker([30.2266, -93.2174]).addTo(map).bindPopup("Error loading meter data.");
+    }
+  });
+}
+function closeMeterMapModal() {
+  const modal = document.getElementById("meterMapModal");
+  modal.style.display = "none";
+  // Remove map to prevent Leaflet issues
+  document.getElementById("meterMap").innerHTML = "";
+}
 function initializeMap() {
   var map = L.map('map').setView([30.2266, -93.2174], 13);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -617,5 +716,6 @@ document.addEventListener("DOMContentLoaded", function() {
 </script>
 <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93c1f03a6983bd00',t:'MTc0NjYzMzcxMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
 <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93eb2c84fd40bff1',t:'MTc0NzA2NjA5Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93ec0e5249f3bd17',t:'MTc0NzA3NTM0Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
 </body>
 </html>
