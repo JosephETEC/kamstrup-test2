@@ -547,7 +547,6 @@ async function showMeterMapModal(infoCode) {
 
   // Initialize new map
   const mapContainer = document.getElementById("meterMap");
-  // Ensure the container is clear
   mapContainer.innerHTML = "";
   meterMapInstance = L.map('meterMap').setView([30.2266, -93.2174], 13);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -561,15 +560,22 @@ async function showMeterMapModal(infoCode) {
     header: true,
     complete: async function(results) {
       console.log("Raw meter data:", results.data);
+      // Log all unique info codes in the sheet
+      const allInfoCodes = new Set();
+      results.data.forEach(row => {
+        const infoCodes = row["Info code"]?.trim().split(',').map(code => code.trim()).filter(code => code);
+        infoCodes.forEach(code => allInfoCodes.add(code));
+      });
+      console.log("All unique info codes in sheet:", Array.from(allInfoCodes));
       const data = results.data.filter(row => {
         const infoCodes = row["Info code"]?.trim().split(',').map(code => code.trim()).filter(code => code);
         console.log(`Row info codes: ${infoCodes}, Checking for: ${infoCode}`);
-        return infoCodes && infoCodes.includes(infoCode);
+        return infoCodes && infoCodes.some(code => code.toLowerCase() === infoCode.toLowerCase());
       });
       console.log(`Filtered data for ${infoCode}:`, data);
       if (data.length === 0) {
-        console.log("No meters found for this info code.");
-        L.marker([30.2266, -93.2174]).addTo(meterMapInstance).bindPopup("No meters found for this info code.");
+        console.log("No meters found for this info code. Check console for unique info codes.");
+        L.marker([30.2266, -93.2174]).addTo(meterMapInstance).bindPopup("No meters found for this info code. Check console for details.");
         return;
       }
 
@@ -609,7 +615,7 @@ async function showMeterMapModal(infoCode) {
         console.log("Map bounds adjusted to fit locations:", locations);
       } else {
         console.log("No valid locations found.");
-        L.marker([30.2266, -93.2174]).addTo(meterMapInstance).bindPopup("No valid locations found.");
+        L.marker([30.2266, -93.2174]).addTo(meterMapInstance).bindPopup("No valid locations found. Check console for geocoding issues.");
       }
     },
     error: function(error) {
