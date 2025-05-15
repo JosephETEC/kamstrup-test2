@@ -300,6 +300,15 @@
   <label><input type="checkbox" id="toggle-modal-rings" /> Show Range Rings</label>
 </div>
 
+
+<div style="text-align:center; margin-bottom:10px;">
+  <label for="modal-map-style">Map View:</label>
+  <select id="modal-map-style">
+    <option value="streets-v12">Street</option>
+    <option value="satellite-streets-v12">Satellite</option>
+  </select>
+</div>
+
 <div id="meterMap"></div>
     <button class="close-btn" onclick="closeMeterMapModal()">Close</button>
   </div>
@@ -522,6 +531,48 @@ function showModal(collectorName, isOnline) {
   mainPowerStatus.innerText = "Status: Loading...";
   topBoxPowerStatus.innerText = "Status: Loading...";
   modal.style.display = "block";
+
+  const modalStyleSelect = document.getElementById("modal-map-style");
+  if (modalStyleSelect) {
+    modalStyleSelect.addEventListener("change", function(e) {
+      if (meterMapInstance) {
+        meterMapInstance.setStyle("mapbox://styles/mapbox/" + e.target.value);
+        meterMapInstance.once("style.load", () => {
+          renderModalRangeRings(meterMapInstance);
+          const visible = document.getElementById("toggle-modal-rings").checked;
+          const ringLayers = meterMapInstance.getStyle().layers?.filter(layer => layer.id.startsWith("modal-ring-")) || [];
+          ringLayers.forEach(layer => {
+            meterMapInstance.setLayoutProperty(layer.id, "visibility", visible ? "visible" : "none");
+          });
+
+          collectorLocations.forEach(([lat, lon, name]) => {
+            const markerEl = document.createElement("div");
+            markerEl.className = "custom-icon-online";
+            markerEl.style.transform = "scale(0.5)";
+            new mapboxgl.Marker({ element: markerEl })
+              .setLngLat([lon, lat])
+              .setPopup(new mapboxgl.Popup().setHTML(`<b>${name}</b><br>Collector Site`))
+              .addTo(meterMapInstance);
+          });
+
+          locations.forEach(([lon, lat], index) => {
+            const meterEl = document.createElement("div");
+            meterEl.style.width = "8px";
+            meterEl.style.height = "8px";
+            meterEl.style.backgroundColor = "#f87171";
+            meterEl.style.borderRadius = "50%";
+            meterEl.style.border = "1px solid white";
+
+            new mapboxgl.Marker({ element: meterEl })
+              .setLngLat([lon, lat])
+              .setPopup(new mapboxgl.Popup().setHTML(meterTooltips[index]))
+              .addTo(meterMapInstance);
+          });
+        });
+      }
+    });
+  }
+
   const config = shellyCloudConfig[collectorName];
   if (config) {
     if (config.mainPower) {
@@ -609,6 +660,48 @@ function showMeterMapModal(infoCode) {
   const title = document.getElementById("meterMapTitle");
   title.innerText = `Meters with Info Code ${infoCode}`;
   modal.style.display = "block";
+
+  const modalStyleSelect = document.getElementById("modal-map-style");
+  if (modalStyleSelect) {
+    modalStyleSelect.addEventListener("change", function(e) {
+      if (meterMapInstance) {
+        meterMapInstance.setStyle("mapbox://styles/mapbox/" + e.target.value);
+        meterMapInstance.once("style.load", () => {
+          renderModalRangeRings(meterMapInstance);
+          const visible = document.getElementById("toggle-modal-rings").checked;
+          const ringLayers = meterMapInstance.getStyle().layers?.filter(layer => layer.id.startsWith("modal-ring-")) || [];
+          ringLayers.forEach(layer => {
+            meterMapInstance.setLayoutProperty(layer.id, "visibility", visible ? "visible" : "none");
+          });
+
+          collectorLocations.forEach(([lat, lon, name]) => {
+            const markerEl = document.createElement("div");
+            markerEl.className = "custom-icon-online";
+            markerEl.style.transform = "scale(0.5)";
+            new mapboxgl.Marker({ element: markerEl })
+              .setLngLat([lon, lat])
+              .setPopup(new mapboxgl.Popup().setHTML(`<b>${name}</b><br>Collector Site`))
+              .addTo(meterMapInstance);
+          });
+
+          locations.forEach(([lon, lat], index) => {
+            const meterEl = document.createElement("div");
+            meterEl.style.width = "8px";
+            meterEl.style.height = "8px";
+            meterEl.style.backgroundColor = "#f87171";
+            meterEl.style.borderRadius = "50%";
+            meterEl.style.border = "1px solid white";
+
+            new mapboxgl.Marker({ element: meterEl })
+              .setLngLat([lon, lat])
+              .setPopup(new mapboxgl.Popup().setHTML(meterTooltips[index]))
+              .addTo(meterMapInstance);
+          });
+        });
+      }
+    });
+  }
+
 
   // Clean up previous map
   if (meterMapInstance) {
