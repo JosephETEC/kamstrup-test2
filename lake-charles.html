@@ -245,7 +245,7 @@
 
 
 <div style="text-align:center; margin:10px 0;">
-  <label><input type="checkbox" id="toggle-rings" checked /> Show Range Rings</label>
+  <label><input type="checkbox" id="toggle-rings" /> Show Range Rings</label>
 </div>
 
 <div style="text-align:center; margin-top:10px;">
@@ -706,6 +706,39 @@ function createGeoJSONCircle(center, radiusInMeters, points = 64) {
   };
 }
 
+
+  let collectorRingData = [];
+
+  function renderRangeRings(map) {
+    collectorRingData.forEach(({ lat, lon, name }) => {
+      [0.5, 1, 1.5, 2].forEach(miles => {
+        const radiusMeters = miles * 1609.34;
+        const circleId = `ring-${name.replace(/\s+/g, '-')}-${miles}`;
+        const geojson = createGeoJSONCircle([lon, lat], radiusMeters);
+
+        if (!map.getSource(circleId)) {
+          map.addSource(circleId, {
+            type: "geojson",
+            data: geojson
+          });
+
+          map.addLayer({
+            id: circleId,
+            type: "line",
+            source: circleId,
+            layout: { visibility: "none" },
+            paint: {
+              "line-color": "#1d4ed8",
+              "line-opacity": 0.8,
+              "line-width": 2,
+              "line-dasharray": [2, 4]
+            }
+          });
+        }
+      });
+    });
+  }
+
 function initializeMap() {
   mapboxgl.accessToken = 'pk.eyJ1Ijoiam9zZXBoLWhlYmVydCIsImEiOiJjbWFsaXlyMWEwOXByMm5vcTcwNXluZDFmIn0.IcFUYqDiW9phV6OYZbISjw';
   
@@ -718,6 +751,15 @@ function initializeMap() {
   });
 
   const map = new mapboxgl.Map({
+  map.on("style.load", () => {
+    renderRangeRings(map);
+    const visible = document.getElementById("toggle-rings").checked;
+    const ringLayers = map.getStyle().layers.filter(layer => layer.id.startsWith("ring-"));
+    ringLayers.forEach(layer => {
+      map.setLayoutProperty(layer.id, "visibility", visible ? "visible" : "none");
+    });
+  });
+
     container: 'map',
     style: 'mapbox://styles/mapbox/streets-v12',
     center: [-93.2174, 30.2266], // Lake Charles
@@ -773,6 +815,8 @@ function initializeMap() {
             .setPopup(new mapboxgl.Popup().setHTML(popupContent))
             .addTo(map);
           console.log(`Marker added for ${name}`);
+        collectorRingData.push({ lat, lon, name });
+
         [0.5, 1, 1.5, 2].forEach((miles, idx) => {
           const radiusMeters = miles * 1609.34;
           const circleId = `ring-${name.replace(/\s+/g, '-')}-${miles}`;
@@ -823,7 +867,16 @@ function initializeMap() {
         }, new mapboxgl.LngLatBounds([locations[0][1], locations[0][0]], [locations[0][1], locations[0][0]]));
         map.fitBounds(bounds, { padding: 30, maxZoom: 11 });
         console.log("Map bounds adjusted");
-  document.getElementById('map-style').addEventListener('change', function(e) {
+  
+  document.getElementById("toggle-rings").addEventListener("change", function(e) {
+    const visible = e.target.checked;
+    const ringLayers = map.getStyle().layers?.filter(layer => layer.id.startsWith("ring-")) || [];
+    ringLayers.forEach(layer => {
+      map.setLayoutProperty(layer.id, "visibility", visible ? "visible" : "none");
+    });
+  });
+
+document.getElementById('map-style').addEventListener('change', function(e) {
     map.setStyle('mapbox://styles/mapbox/' + e.target.value);
   });
 
