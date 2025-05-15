@@ -584,6 +584,27 @@ async function showMeterMapModal(infoCode) {
     zoom: 12
   });
 
+  
+  const collectorLocations = [
+    [30.220558, -93.162325, "Main Street Tower"],
+    [30.205775, -93.236622, "Wastewater Plant"],
+    [30.249414, -93.194447, "Fire Station #3"],
+    [30.178947, -93.246383, "Alma Lane Water Plant"],
+    [30.162100, -93.282336, "Fire Station #8"],
+    [30.226611, -93.204167, "Police HQ"],
+    [30.199267, -93.212056, "Center Street WTP"]
+  ];
+
+  collectorLocations.forEach(([lat, lon, name]) => {
+    const markerEl = document.createElement("div");
+    markerEl.className = "custom-icon-online";
+    markerEl.style.transform = "scale(0.5)";
+    new mapboxgl.Marker({ element: markerEl })
+      .setLngLat([lon, lat])
+      .setPopup(new mapboxgl.Popup().setHTML(`<b>${name}</b><br>Collector Site`))
+      .addTo(meterMapInstance);
+  });
+
   // Fetch meter data
   Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQIA7LGRH_4JfIMDaHhp12-DhSD37xexpulbwumfFDBoA9rF8y6RtgepNxeO1EkRS_t0UtVzG8cFsFc/pub?gid=63920378&single=true&output=csv", {
     download: true,
