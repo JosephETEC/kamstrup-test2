@@ -560,7 +560,18 @@ async function geocodeAddress(address, city, zipCode) {
   }
 }
 let meterMapInstance = null;
-async function showMeterMapModal(infoCode) {
+async 
+  const collectorLocations = [
+    [30.220558, -93.162325, "Main Street Tower"],
+    [30.205775, -93.236622, "Wastewater Plant"],
+    [30.249414, -93.194447, "Fire Station #3"],
+    [30.178947, -93.246383, "Alma Lane Water Plant"],
+    [30.162100, -93.282336, "Fire Station #8"],
+    [30.226611, -93.204167, "Police HQ"],
+    [30.199267, -93.212056, "Center Street WTP"]
+  ];
+
+function showMeterMapModal(infoCode) {
   console.log(`Opening meter map modal for info code: ${infoCode}`);
   const modal = document.getElementById("meterMapModal");
   const title = document.getElementById("meterMapTitle");
@@ -582,6 +593,16 @@ async function showMeterMapModal(infoCode) {
     style: 'mapbox://styles/mapbox/streets-v12',
     center: [-93.2174, 30.2266], // Lake Charles
     zoom: 12
+  });
+
+  
+  collectorLocations.forEach(([lat, lon, name]) => {
+    const markerEl = document.createElement("div");
+    markerEl.className = "custom-icon-online";
+    new mapboxgl.Marker({ element: markerEl, scale: 0.5 })
+      .setLngLat([lon, lat])
+      .setPopup(new mapboxgl.Popup().setHTML(`<b>${name}</b><br>Collector Site`))
+      .addTo(meterMapInstance);
   });
 
   // Fetch meter data
@@ -944,13 +965,7 @@ document.getElementById('map-style').addEventListener('change', function(e) {
     }
   });
 }
-document.addEventListener("DOMContentLoaded", function() {
-  initializeMap();
-  updateCollectorStatus();
-  updateReadingAndMissingData();
-  renderInfoCodeChart();
-  updateCollectorTable();
-});
+
 </script>
 <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93c1f03a6983bd00',t:'MTc0NjYzMzcxMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
 <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93eb2c84fd40bff1',t:'MTc0NzA2NjA5Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
@@ -958,3 +973,11 @@ document.addEventListener("DOMContentLoaded", function() {
 <script src="https://cdn.jsdelivr.net/npm/mapbox-circle@1.0.3/dist/mapbox-circle.min.js"></script>
 </body>
 </html>
+
+document.addEventListener("DOMContentLoaded", function() {
+  initializeMap();
+  updateCollectorStatus();
+  updateReadingAndMissingData();
+  renderInfoCodeChart();
+  updateCollectorTable();
+});
