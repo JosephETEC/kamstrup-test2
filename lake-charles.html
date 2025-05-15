@@ -243,6 +243,11 @@
   </div>
 </div>
 
+
+<div style="text-align:center; margin:10px 0;">
+  <label><input type="checkbox" id="toggle-rings" checked /> Show Range Rings</label>
+</div>
+
 <div style="text-align:center; margin-top:10px;">
   <label for="map-style">Map View:</label>
   <select id="map-style">
@@ -703,6 +708,15 @@ function createGeoJSONCircle(center, radiusInMeters, points = 64) {
 
 function initializeMap() {
   mapboxgl.accessToken = 'pk.eyJ1Ijoiam9zZXBoLWhlYmVydCIsImEiOiJjbWFsaXlyMWEwOXByMm5vcTcwNXluZDFmIn0.IcFUYqDiW9phV6OYZbISjw';
+  
+  document.getElementById("toggle-rings").addEventListener("change", function(e) {
+    const visible = e.target.checked;
+    const ringLayers = map.getStyle().layers.filter(layer => layer.id.startsWith("ring-"));
+    ringLayers.forEach(layer => {
+      map.setLayoutProperty(layer.id, "visibility", visible ? "visible" : "none");
+    });
+  });
+
   const map = new mapboxgl.Map({
     container: 'map',
     style: 'mapbox://styles/mapbox/streets-v12',
