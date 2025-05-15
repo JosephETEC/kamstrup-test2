@@ -592,8 +592,6 @@ async function showMeterMapModal(infoCode) {
     [30.226611, -93.204167, "Police HQ"],
     [30.199267, -93.212056, "Center Street WTP"]
   ];
-
-
   collectorLocations.forEach(([lat, lon, name]) => {
     const markerEl = document.createElement("div");
     markerEl.className = "custom-icon-online";
@@ -708,7 +706,6 @@ function createGeoJSONCircle(center, radiusInMeters, points = 64) {
   const ret = [];
   const distanceX = km / (111.320 * Math.cos(coords.latitude * Math.PI / 180));
   const distanceY = km / 110.574;
-
   for (let i = 0; i < points; i++) {
     const theta = (i / points) * (2 * Math.PI);
     const x = distanceX * Math.cos(theta);
@@ -722,35 +719,32 @@ function createGeoJSONCircle(center, radiusInMeters, points = 64) {
   };
 }
 
-  let collectorRingData = [];
+let collectorRingData = [];
 
-  function renderRangeRings(map) {
-    collectorRingData.forEach(({ lat, lon, name }) => {
-      [0.5, 1, 1.5, 2].forEach(miles => {
-        const radiusMeters = miles * 1609.34;
-        const circleId = `ring-${name.replace(/\s+/g, '-')}-${miles}`;
-        const geojson = createGeoJSONCircle([lon, lat], radiusMeters);
-        if (!map.getSource(circleId)) {
-          map.addSource(circleId, {
-            type: "geojson",
-            data: geojson
-          });
-          map.addLayer({
-            id: circleId,
-            type: "line",
-            source: circleId,
-            layout: { visibility: "none" },
-            paint: {
-              "line-color": "#1d4ed8",
-              "line-opacity": 0.8,
-              "line-width": 2,
-              "line-dasharray": [2, 4]
-            }
-          });
-        }
-      });
+function renderRangeRings(map) {
+  collectorRingData.forEach(({ lat, lon, name }) => {
+    [0.5, 1, 1.5, 2].forEach(miles => {
+      const radiusMeters = miles * 1609.34;
+      const circleId = `ring-${name.replace(/\s+/g, '-')}-${miles}`;
+      const geojson = createGeoJSONCircle([lon, lat], radiusMeters);
+      if (!map.getSource(circleId)) {
+        map.addSource(circleId, { type: "geojson", data: geojson });
+        map.addLayer({
+          id: circleId,
+          type: "line",
+          source: circleId,
+          layout: { visibility: "none" },
+          paint: {
+            "line-color": "#1d4ed8",
+            "line-opacity": 0.8,
+            "line-width": 2,
+            "line-dasharray": [2, 4]
+          }
+        });
+      }
     });
-  }
+  });
+}
 
 function initializeMap() {
   mapboxgl.accessToken = 'pk.eyJ1Ijoiam9zZXBoLWhlYmVydCIsImEiOiJjbWFsaXlyMWEwOXByMm5vcTcwNXluZDFmIn0.IcFUYqDiW9phV6OYZbISjw';
@@ -770,7 +764,7 @@ function initializeMap() {
   map.on("style.load", () => {
     renderRangeRings(map);
     const visible = document.getElementById("toggle-rings").checked;
-    const ringLayers = map.getStyle().layers.filter(layer => layer.id.startsWith("ring-"));
+    const ringLayers = map.getStyle().layers?.filter(layer => layer.id.startsWith("ring-")) || [];
     ringLayers.forEach(layer => {
       map.setLayoutProperty(layer.id, "visibility", visible ? "visible" : "none");
     });
@@ -890,7 +884,13 @@ function initializeMap() {
     }
   });
 }
-
+document.addEventListener("DOMContentLoaded", function() {
+  initializeMap();
+  updateCollectorStatus();
+  updateReadingAndMissingData();
+  renderInfoCodeChart();
+  updateCollectorTable();
+});
 </script>
 <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93c1f03a6983bd00',t:'MTc0NjYzMzcxMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
 <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93eb2c84fd40bff1',t:'MTc0NzA2NjA5Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
@@ -908,5 +908,3 @@ document.addEventListener("DOMContentLoaded", function() {
 
 </body>
 </html>
-
-
