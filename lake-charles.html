@@ -295,7 +295,12 @@
 <div id="meterMapModal" class="modal">
   <div class="modal-content">
     <h3 id="meterMapTitle">Meters with Info Code</h3>
-    <div id="meterMap"></div>
+    
+<div style="text-align:center; margin-bottom:10px;">
+  <label><input type="checkbox" id="toggle-modal-rings" /> Show Range Rings</label>
+</div>
+
+<div id="meterMap"></div>
     <button class="close-btn" onclick="closeMeterMapModal()">Close</button>
   </div>
 </div>
@@ -560,7 +565,45 @@ async function geocodeAddress(address, city, zipCode) {
   }
 }
 let meterMapInstance = null;
-async function showMeterMapModal(infoCode) {
+async 
+function renderModalRangeRings(mapInstance) {
+  const collectorLocations = [
+    [30.220558, -93.162325, "Main Street Tower"],
+    [30.205775, -93.236622, "Wastewater Plant"],
+    [30.249414, -93.194447, "Fire Station #3"],
+    [30.178947, -93.246383, "Alma Lane Water Plant"],
+    [30.162100, -93.282336, "Fire Station #8"],
+    [30.226611, -93.204167, "Police HQ"],
+    [30.199267, -93.212056, "Center Street WTP"]
+  ];
+  collectorLocations.forEach(([lat, lon, name]) => {
+    [0.5, 1, 1.5, 2].forEach(miles => {
+      const radiusMeters = miles * 1609.34;
+      const circleId = `modal-ring-${name.replace(/\s+/g, '-')}-${miles}`;
+      const geojson = createGeoJSONCircle([lon, lat], radiusMeters);
+      if (!mapInstance.getSource(circleId)) {
+        mapInstance.addSource(circleId, {
+          type: "geojson",
+          data: geojson
+        });
+        mapInstance.addLayer({
+          id: circleId,
+          type: "line",
+          source: circleId,
+          layout: { visibility: "none" },
+          paint: {
+            "line-color": "#1d4ed8",
+            "line-opacity": 0.8,
+            "line-width": 2,
+            "line-dasharray": [2, 4]
+          }
+        });
+      }
+    });
+  });
+}
+
+function showMeterMapModal(infoCode) {
   console.log(`Opening meter map modal for info code: ${infoCode}`);
   const modal = document.getElementById("meterMapModal");
   const title = document.getElementById("meterMapTitle");
@@ -667,7 +710,29 @@ async function showMeterMapModal(infoCode) {
         }
       }
 
-      if (locations.length > 0) {
+      
+  renderModalRangeRings(meterMapInstance);
+
+  const modalRingToggle = document.getElementById("toggle-modal-rings");
+  if (modalRingToggle) {
+    modalRingToggle.addEventListener("change", function(e) {
+      const visible = e.target.checked;
+      const ringLayers = meterMapInstance.getStyle().layers.filter(l => l.id.startsWith("modal-ring-"));
+      ringLayers.forEach(layer => {
+        meterMapInstance.setLayoutProperty(layer.id, "visibility", visible ? "visible" : "none");
+      });
+    });
+  }
+
+  // Adjust view to show all meter pins + collectors
+  const bounds = new mapboxgl.LngLatBounds();
+  locations.forEach(([lon, lat]) => bounds.extend([lon, lat]));
+  collectorLocations.forEach(([lat, lon]) => bounds.extend([lon, lat]));
+  if (!bounds.isEmpty()) {
+    meterMapInstance.fitBounds(bounds, { padding: 30, maxZoom: 14 });
+  }
+
+  if (locations.length > 0) {
         const bounds = locations.reduce((bounds, coord) => {
           return bounds.extend(coord);
         }, new mapboxgl.LngLatBounds(locations[0], locations[0]));
