@@ -242,6 +242,15 @@
     <p id="collector-status" style="font-size: 1.8em; margin: 10px 0;">Loading...</p>
   </div>
 </div>
+
+<div style="text-align:center; margin-top:10px;">
+  <label for="map-style">Map View:</label>
+  <select id="map-style">
+    <option value="streets-v12">Street</option>
+    <option value="satellite-streets-v12">Satellite</option>
+  </select>
+</div>
+
 <div id="map"></div>
 <div class="info">
   <table>
@@ -732,6 +741,27 @@ function initializeMap() {
         }, new mapboxgl.LngLatBounds([locations[0][1], locations[0][0]], [locations[0][1], locations[0][0]]));
         map.fitBounds(bounds, { padding: 30, maxZoom: 11 });
         console.log("Map bounds adjusted");
+  document.getElementById('map-style').addEventListener('change', function(e) {
+    map.setStyle('mapbox://styles/mapbox/' + e.target.value);
+  });
+
+  const ringRadiiMiles = [0.5, 1, 1.5, 2];
+  locations.forEach(([lat, lon, name], index) => {
+    ringRadiiMiles.forEach(miles => {
+      const radiusMeters = miles * 1609.34;
+      const circle = new MapboxCircle({ lat: lat, lng: lon }, radiusMeters, {
+        strokeColor: "#1d4ed8",
+        strokeOpacity: 0.8,
+        strokeWeight: 2,
+        fillColor: "#93c5fd",
+        fillOpacity: 0.05,
+        editable: false,
+        visible: true
+      });
+      circle.addTo(map);
+    });
+  });
+
       } catch (error) {
         console.error("Failed to adjust map bounds:", error);
       }
@@ -790,5 +820,6 @@ document.addEventListener("DOMContentLoaded", function() {
 <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93c1f03a6983bd00',t:'MTc0NjYzMzcxMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
 <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93eb2c84fd40bff1',t:'MTc0NzA2NjA5Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
 <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93ec0e5249f3bd17',t:'MTc0NzA3NTM0Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
+<script src="https://cdn.jsdelivr.net/npm/mapbox-circle@1.0.3/dist/mapbox-circle.min.js"></script>
 </body>
 </html>
