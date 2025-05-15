@@ -689,14 +689,12 @@ function showMeterMapModal(infoCode) {
           const coords = await geocodeAddress(address, city, zipCode);
           if (coords) {
             locations.push([coords.lon, coords.lat]);
-            new mapboxgl.Marker()
-              .setLngLat([coords.lon, coords.lat])
+            
               .setPopup(new mapboxgl.Popup().setHTML(`
                 <b>Meter: ${serialNumber}</b><br>
                 Address: ${address}, ${city}, ${zipCode}<br>
                 Info Codes: ${infoCodes}
-              `))
-              .addTo(meterMapInstance);
+              
             console.log(`Added pin for ${serialNumber} at [${coords.lat}, ${coords.lon}]`);
           } else {
             console.log(`Geocoding failed for ${address}, ${city}, ${zipCode}`);
