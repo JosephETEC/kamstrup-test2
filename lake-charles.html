@@ -772,13 +772,14 @@ function initializeMap() {
 
           map.addLayer({
             id: circleId,
-            type: "fill",
+            type: "line",
             source: circleId,
             layout: {},
             paint: {
-              "fill-color": "#93c5fd",
-              "fill-opacity": 0.08,
-              "fill-outline-color": "#1d4ed8"
+              "line-color": "#1d4ed8",
+              "line-opacity": 0.8,
+              "line-width": 2,
+              "line-dasharray": [2, 4]
             }
           });
         });
