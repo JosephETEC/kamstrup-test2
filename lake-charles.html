@@ -243,11 +243,9 @@
   </div>
 </div>
 
-
 <div style="text-align:center; margin:10px 0;">
   <label><input type="checkbox" id="toggle-rings" /> Show Range Rings</label>
 </div>
-
 <div style="text-align:center; margin-top:10px;">
   <label for="map-style">Map View:</label>
   <select id="map-style">
@@ -560,18 +558,7 @@ async function geocodeAddress(address, city, zipCode) {
   }
 }
 let meterMapInstance = null;
-async 
-  const collectorLocations = [
-    [30.220558, -93.162325, "Main Street Tower"],
-    [30.205775, -93.236622, "Wastewater Plant"],
-    [30.249414, -93.194447, "Fire Station #3"],
-    [30.178947, -93.246383, "Alma Lane Water Plant"],
-    [30.162100, -93.282336, "Fire Station #8"],
-    [30.226611, -93.204167, "Police HQ"],
-    [30.199267, -93.212056, "Center Street WTP"]
-  ];
-
-function showMeterMapModal(infoCode) {
+async function showMeterMapModal(infoCode) {
   console.log(`Opening meter map modal for info code: ${infoCode}`);
   const modal = document.getElementById("meterMapModal");
   const title = document.getElementById("meterMapTitle");
@@ -596,10 +583,22 @@ function showMeterMapModal(infoCode) {
   });
 
   
+  const collectorLocations = [
+    [30.220558, -93.162325, "Main Street Tower"],
+    [30.205775, -93.236622, "Wastewater Plant"],
+    [30.249414, -93.194447, "Fire Station #3"],
+    [30.178947, -93.246383, "Alma Lane Water Plant"],
+    [30.162100, -93.282336, "Fire Station #8"],
+    [30.226611, -93.204167, "Police HQ"],
+    [30.199267, -93.212056, "Center Street WTP"]
+  ];
+
+
   collectorLocations.forEach(([lat, lon, name]) => {
     const markerEl = document.createElement("div");
     markerEl.className = "custom-icon-online";
-    new mapboxgl.Marker({ element: markerEl, scale: 0.5 })
+    markerEl.style.transform = "scale(0.5)";
+    new mapboxgl.Marker({ element: markerEl })
       .setLngLat([lon, lat])
       .setPopup(new mapboxgl.Popup().setHTML(`<b>${name}</b><br>Collector Site`))
       .addTo(meterMapInstance);
@@ -714,19 +713,14 @@ function createGeoJSONCircle(center, radiusInMeters, points = 64) {
     const theta = (i / points) * (2 * Math.PI);
     const x = distanceX * Math.cos(theta);
     const y = distanceY * Math.sin(theta);
-
     ret.push([coords.longitude + x, coords.latitude + y]);
   }
   ret.push(ret[0]);
   return {
     type: "Feature",
-    geometry: {
-      type: "Polygon",
-      coordinates: [ret]
-    }
+    geometry: { type: "Polygon", coordinates: [ret] }
   };
 }
-
 
   let collectorRingData = [];
 
@@ -736,13 +730,11 @@ function createGeoJSONCircle(center, radiusInMeters, points = 64) {
         const radiusMeters = miles * 1609.34;
         const circleId = `ring-${name.replace(/\s+/g, '-')}-${miles}`;
         const geojson = createGeoJSONCircle([lon, lat], radiusMeters);
-
         if (!map.getSource(circleId)) {
           map.addSource(circleId, {
             type: "geojson",
             data: geojson
           });
-
           map.addLayer({
             id: circleId,
             type: "line",
@@ -763,15 +755,18 @@ function createGeoJSONCircle(center, radiusInMeters, points = 64) {
 function initializeMap() {
   mapboxgl.accessToken = 'pk.eyJ1Ijoiam9zZXBoLWhlYmVydCIsImEiOiJjbWFsaXlyMWEwOXByMm5vcTcwNXluZDFmIn0.IcFUYqDiW9phV6OYZbISjw';
   
+  document.getElementById("map-style").addEventListener("change", function(e) {
+    map.setStyle("mapbox://styles/mapbox/" + e.target.value);
+  });
+
   document.getElementById("toggle-rings").addEventListener("change", function(e) {
     const visible = e.target.checked;
-    const ringLayers = map.getStyle().layers.filter(layer => layer.id.startsWith("ring-"));
+    const ringLayers = map.getStyle().layers?.filter(layer => layer.id.startsWith("ring-")) || [];
     ringLayers.forEach(layer => {
       map.setLayoutProperty(layer.id, "visibility", visible ? "visible" : "none");
     });
   });
 
-  const map = new mapboxgl.Map({
   map.on("style.load", () => {
     renderRangeRings(map);
     const visible = document.getElementById("toggle-rings").checked;
@@ -781,6 +776,7 @@ function initializeMap() {
     });
   });
 
+  const map = new mapboxgl.Map({
     container: 'map',
     style: 'mapbox://styles/mapbox/streets-v12',
     center: [-93.2174, 30.2266], // Lake Charles
@@ -836,48 +832,7 @@ function initializeMap() {
             .setPopup(new mapboxgl.Popup().setHTML(popupContent))
             .addTo(map);
           console.log(`Marker added for ${name}`);
-        collectorRingData.push({ lat, lon, name });
-
-        [0.5, 1, 1.5, 2].forEach((miles, idx) => {
-          const radiusMeters = miles * 1609.34;
-          const circleId = `ring-${name.replace(/\s+/g, '-')}-${miles}`;
-          const geojson = createGeoJSONCircle([lon, lat], radiusMeters);
-          if (map.getSource(circleId)) return;
-
-          map.addSource(circleId, {
-            type: "geojson",
-            data: geojson
-          });
-
-          map.addLayer({
-            id: circleId,
-            type: "line",
-            source: circleId,
-            layout: {},
-            paint: {
-              "line-color": "#1d4ed8",
-              "line-opacity": 0.8,
-              "line-width": 2,
-              "line-dasharray": [2, 4]
-            }
-          });
-        });
-
-        // Draw range rings for this collector
-        [0.5, 1, 1.5, 2].forEach(miles => {
-          const radiusMeters = miles * 1609.34;
-          const circle = new MapboxCircle({ lat: lat, lng: lon }, radiusMeters, {
-            strokeColor: "#1d4ed8",
-            strokeOpacity: 0.8,
-            strokeWeight: 2,
-            fillColor: "#93c5fd",
-            fillOpacity: 0.05,
-            editable: false,
-            visible: true
-          });
-          circle.addTo(map);
-        });
-
+          collectorRingData.push({ lat, lon, name });
         } catch (error) {
           console.error(`Failed to add marker for ${name}:`, error);
         }
@@ -888,36 +843,6 @@ function initializeMap() {
         }, new mapboxgl.LngLatBounds([locations[0][1], locations[0][0]], [locations[0][1], locations[0][0]]));
         map.fitBounds(bounds, { padding: 30, maxZoom: 11 });
         console.log("Map bounds adjusted");
-  
-  document.getElementById("toggle-rings").addEventListener("change", function(e) {
-    const visible = e.target.checked;
-    const ringLayers = map.getStyle().layers?.filter(layer => layer.id.startsWith("ring-")) || [];
-    ringLayers.forEach(layer => {
-      map.setLayoutProperty(layer.id, "visibility", visible ? "visible" : "none");
-    });
-  });
-
-document.getElementById('map-style').addEventListener('change', function(e) {
-    map.setStyle('mapbox://styles/mapbox/' + e.target.value);
-  });
-
-  const ringRadiiMiles = [0.5, 1, 1.5, 2];
-  locations.forEach(([lat, lon, name], index) => {
-    ringRadiiMiles.forEach(miles => {
-      const radiusMeters = miles * 1609.34;
-      const circle = new MapboxCircle({ lat: lat, lng: lon }, radiusMeters, {
-        strokeColor: "#1d4ed8",
-        strokeOpacity: 0.8,
-        strokeWeight: 2,
-        fillColor: "#93c5fd",
-        fillOpacity: 0.05,
-        editable: false,
-        visible: true
-      });
-      circle.addTo(map);
-    });
-  });
-
       } catch (error) {
         console.error("Failed to adjust map bounds:", error);
       }
@@ -965,12 +890,17 @@ document.getElementById('map-style').addEventListener('change', function(e) {
     }
   });
 }
-
+document.addEventListener("DOMContentLoaded", function() {
+  initializeMap();
+  updateCollectorStatus();
+  updateReadingAndMissingData();
+  renderInfoCodeChart();
+  updateCollectorTable();
+});
 </script>
 <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93c1f03a6983bd00',t:'MTc0NjYzMzcxMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
 <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93eb2c84fd40bff1',t:'MTc0NzA2NjA5Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
 <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93ec0e5249f3bd17',t:'MTc0NzA3NTM0Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
-<script src="https://cdn.jsdelivr.net/npm/mapbox-circle@1.0.3/dist/mapbox-circle.min.js"></script>
 </body>
 </html>
 
