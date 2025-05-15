@@ -689,12 +689,21 @@ function showMeterMapModal(infoCode) {
           const coords = await geocodeAddress(address, city, zipCode);
           if (coords) {
             locations.push([coords.lon, coords.lat]);
-            
+            const meterEl = document.createElement("div");
+            meterEl.style.width = "5px";
+            meterEl.style.height = "5px";
+            meterEl.style.backgroundColor = "#f87171";
+            meterEl.style.borderRadius = "50%";
+            meterEl.style.border = "1px solid white";
+
+            new mapboxgl.Marker({ element: meterEl })
+              .setLngLat([coords.lon, coords.lat])
               .setPopup(new mapboxgl.Popup().setHTML(`
                 <b>Meter: ${serialNumber}</b><br>
                 Address: ${address}, ${city}, ${zipCode}<br>
                 Info Codes: ${infoCodes}
-              
+              `))
+              .addTo(meterMapInstance);
             console.log(`Added pin for ${serialNumber} at [${coords.lat}, ${coords.lon}]`);
           } else {
             console.log(`Geocoding failed for ${address}, ${city}, ${zipCode}`);
