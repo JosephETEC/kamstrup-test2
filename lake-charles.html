@@ -239,6 +239,25 @@
       border-radius: 50%;
       border: 2px solid white;
     }
+    .meter-marker {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      border: 1px solid white;
+      opacity: 0.65; /* Set opacity to 65% */
+    }
+    .meter-marker-red {
+      background-color: #FF0000;
+    }
+    .meter-marker-orange {
+      background-color: #FFA500;
+    }
+    .meter-marker-yellow {
+      background-color: #FFFF00;
+    }
+    .meter-marker-default {
+      background-color: #808080; /* Gray for unexpected percentages */
+    }
     @media screen and (max-width: 600px) {
       nav { flex-direction: column; gap: 8px; }
       h1 { font-size: 1.3em; }
@@ -282,9 +301,19 @@
   </div>
 </div>
 
-
 <div style="text-align:center; margin:10px 0;">
   <label><input type="checkbox" id="toggle-rings" /> Show Range Rings</label>
+</div>
+
+<div style="text-align:center; margin-top:10px;">
+  <label for="meter-filter">Filter Meters:</label>
+  <select id="meter-filter">
+    <option value="all">All</option>
+    <option value="0.00">0.00%</option>
+    <option value="33.33">33.33%</option>
+    <option value="66.67">66.67%</option>
+    <option value="none">None</option>
+  </select>
 </div>
 
 <div style="text-align:center; margin-top:10px;">
@@ -660,7 +689,7 @@ function showMeterMapModal(infoCode) {
             const markerEl = document.createElement("div");
             markerEl.className = "custom-icon-online";
             markerEl.style.transform = "scale(0.5)";
-            new mapboxgl.Marker({ element: markerEl })
+            new mapboxgl.Marker({ element: meterEl })
               .setLngLat([lon, lat])
               .setPopup(new mapboxgl.Popup().setHTML(`<b>${name}</b><br>Collector Site`))
               .addTo(meterMapInstance);
@@ -674,7 +703,7 @@ function showMeterMapModal(infoCode) {
             meterEl.style.borderRadius = "50%";
             meterEl.style.border = "1px solid white";
 
-            new mapboxgl.Marker({ element: markerEl })
+            new mapboxgl.Marker({ element: meterEl })
               .setLngLat([lon, lat])
               .setPopup(new mapboxgl.Popup().setHTML(meterTooltips[index]))
               .addTo(meterMapInstance);
@@ -864,6 +893,9 @@ const rangeCenters = [
   [30.199267, -93.212056, "Center Street WTP"]
 ];
 
+// Global array to store meter markers and their performance percentages
+let meterMarkers = [];
+
 function renderRangeRings(map) {
   rangeCenters.forEach(([lat, lon, name]) => {
     [0.5, 1, 1.5, 2].forEach(miles => {
@@ -898,12 +930,15 @@ function initializeMap() {
     zoom: 12
   });
 
+  const bounds = new mapboxgl.LngLatBounds();
+
+  // Fetch and render collector data
   Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=96572475&single=true&output=csv", {
     download: true,
     header: true,
     complete: function(results) {
       const data = results.data;
-      console.log("Raw Google Sheet Data:", data);
+      console.log("Raw Google Sheet Data (Collectors):", data);
       const lakeCharlesCollectors = data.filter(row => row["City"]?.trim().toLowerCase() === "lake charles");
       console.log("Lake Charles Collectors:", lakeCharlesCollectors);
       lakeCharlesCollectors.forEach(row => {
@@ -924,9 +959,9 @@ function initializeMap() {
         [30.226611, -93.204167, "Police HQ"],
         [30.199267, -93.212056, "Center Street WTP"]
       ];
-      console.log("Processing Locations:", locations);
+      console.log("Processing Collector Locations:", locations);
       locations.forEach(([lat, lon, name], index) => {
-        console.log(`Processing Location #${index + 1}: ${name} at [${lat}, ${lon}]`);
+        console.log(`Processing Collector Location #${index + 1}: ${name} at [${lat}, ${lon}]`);
         const collector = lakeCharlesCollectors.find(row => row["Collector Name"]?.trim().toLowerCase() === name.toLowerCase());
         const issueValue = collector ? collector["Collector Issue"]?.trim() : null;
         const isOnline = issueValue === "No" || !collector || issueValue !== "Yes";
@@ -945,21 +980,112 @@ function initializeMap() {
           new mapboxgl.Marker({ element: markerEl })
             .setLngLat([lon, lat])
             .setPopup(new mapboxgl.Popup().setHTML(popupContent))
-            .addTo(map);
-          console.log(`Marker added for ${name}`);
+            .addTo(window.map);
+          console.log(`Marker added for collector ${name}`);
+          bounds.extend([lon, lat]);
         } catch (error) {
           console.error(`Failed to add marker for ${name}:`, error);
         }
       });
-      try {
-        const bounds = locations.reduce((bounds, [lat, lon]) => {
-          return bounds.extend([lon, lat]);
-        }, new mapboxgl.LngLatBounds([locations[0][1], locations[0][0]], [locations[0][1], locations[0][0]]));
-        map.fitBounds(bounds, { padding: 30, maxZoom: 11 });
-        console.log("Map bounds adjusted");
-      } catch (error) {
-        console.error("Failed to adjust map bounds:", error);
-      }
+
+      // Fetch and render meter data
+      Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vRPuL40wt_TX5FWcfwErPK3SEbj70OzqCZFzyBgtsEASoE55EP5SSo9FbV9KmC_MXlWnvosz6bkI8FU/pub?gid=0&single=true&output=csv", {
+        download: true,
+        header: false,
+        complete: function(results) {
+          const data = results.data.slice(14); // Skip first 14 rows (0-based index, so row 15 is index 14)
+          console.log("Raw Meter Data:", data);
+          data.forEach((row, index) => {
+            console.log(`Raw Row ${index + 15}:`, row); // Log the entire row for debugging
+            const meterNumber = row[0]?.trim() || "N/A";
+            const address = row[1]?.trim() || "N/A";
+            const performance = parseFloat(row[3]?.trim()); // Column D (index 3)
+            // Latitude and Longitude from columns H and I (indices 7 and 8)
+            const latRaw = row[7]?.trim();
+            const lonRaw = row[8]?.trim();
+            const lat = parseFloat(latRaw);
+            const lon = parseFloat(lonRaw);
+            console.log(`Processing Meter #${index + 1}: ${meterNumber} at [lat: ${latRaw} -> ${lat}, lon: ${lonRaw} -> ${lon}] with performance ${performance}%`);
+
+            if (!isNaN(lat) && !isNaN(lon) && !isNaN(performance)) {
+              // Validate coordinates are within Lake Charles area
+              if (lat >= 30.0 && lat <= 30.5 && lon >= -93.5 && lon <= -93.0) {
+                let markerClass;
+                if (performance === 0.00) {
+                  markerClass = 'meter-marker-red';
+                } else if (performance === 33.33) {
+                  markerClass = 'meter-marker-orange';
+                } else if (performance === 66.67) {
+                  markerClass = 'meter-marker-yellow';
+                } else {
+                  markerClass = 'meter-marker-default';
+                  console.warn(`Unexpected performance value ${performance} for meter ${meterNumber}`);
+                }
+
+                const meterEl = document.createElement("div");
+                meterEl.className = `meter-marker ${markerClass}`;
+                const popupContent = `
+                  <b>Meter: ${meterNumber}</b><br>
+                  Address: ${address}
+                `;
+                try {
+                  const marker = new mapboxgl.Marker({ element: meterEl })
+                    .setLngLat([lon, lat])
+                    .setPopup(new mapboxgl.Popup().setHTML(popupContent))
+                    .addTo(window.map);
+                  console.log(`Marker added for meter ${meterNumber} at [${lon}, ${lat}]`);
+                  // Store marker and its performance for filtering
+                  meterMarkers.push({ marker, performance });
+                  bounds.extend([lon, lat]);
+                } catch (error) {
+                  console.error(`Failed to add marker for meter ${meterNumber}:`, error);
+                }
+              } else {
+                console.warn(`Meter ${meterNumber} has coordinates outside Lake Charles: [${lat}, ${lon}]`);
+              }
+            } else {
+              console.warn(`Skipping meter ${meterNumber}: Invalid lat(${latRaw} -> ${lat}), lon(${lonRaw} -> ${lon}), or performance(${performance})`);
+            }
+          });
+
+          // Adjust map bounds to include collectors and meters
+          if (!bounds.isEmpty()) {
+            window.map.fitBounds(bounds, { padding: 30, maxZoom: 11 });
+            console.log("Map bounds adjusted to include collectors and meters");
+          } else {
+            console.warn("No valid bounds calculated; using default view");
+          }
+
+          // Add event listener for meter filter
+          const meterFilterSelect = document.getElementById("meter-filter");
+          meterFilterSelect.addEventListener("change", function(e) {
+            const filterValue = e.target.value;
+            console.log(`Filtering meters by: ${filterValue}`);
+            meterMarkers.forEach(({ marker, performance }) => {
+              if (filterValue === "all") {
+                marker.addTo(window.map);
+              } else if (filterValue === "none") {
+                marker.remove();
+              } else {
+                const filterPerformance = parseFloat(filterValue);
+                if (performance === filterPerformance) {
+                  marker.addTo(window.map);
+                } else {
+                  marker.remove();
+                }
+              }
+            });
+          });
+        },
+        error: function(error) {
+          console.error("Failed to fetch meter data:", error);
+          // Still adjust bounds for collectors if meters fail
+          if (!bounds.isEmpty()) {
+            window.map.fitBounds(bounds, { padding: 30, maxZoom: 11 });
+            console.log("Map bounds adjusted for collectors only");
+          }
+        }
+      });
     },
     error: function(error) {
       console.error("Failed to fetch collector data from Google Sheet:", error);
@@ -972,9 +1098,9 @@ function initializeMap() {
         [30.226611, -93.204167, "Police HQ"],
         [30.199267, -93.212056, "Center Street WTP"]
       ];
-      console.log("Using fallback locations:", locations);
+      console.log("Using fallback collector locations:", locations);
       locations.forEach(([lat, lon, name], index) => {
-        console.log(`Processing Fallback Location #${index + 1}: ${name} at [${lat}, ${lon}]`);
+        console.log(`Processing Fallback Collector Location #${index + 1}: ${name} at [${lat}, ${lon}]`);
         const markerEl = document.createElement('div');
         markerEl.className = 'custom-icon-online';
         const popupContent = `
@@ -986,21 +1112,107 @@ function initializeMap() {
           new mapboxgl.Marker({ element: markerEl })
             .setLngLat([lon, lat])
             .setPopup(new mapboxgl.Popup().setHTML(popupContent))
-            .addTo(map);
-          console.log(`Fallback marker added for ${name}`);
+            .addTo(window.map);
+          console.log(`Fallback marker added for collector ${name}`);
+          bounds.extend([lon, lat]);
         } catch (error) {
           console.error(`Failed to add fallback marker for ${name}:`, error);
         }
       });
-      try {
-        const bounds = locations.reduce((bounds, [lat, lon]) => {
-          return bounds.extend([lon, lat]);
-        }, new mapboxgl.LngLatBounds([locations[0][1], locations[0][0]], [locations[0][1], locations[0][0]]));
-        map.fitBounds(bounds, { padding: 30, maxZoom: 11 });
-        console.log("Fallback map bounds adjusted");
-      } catch (error) {
-        console.error("Failed to adjust fallback map bounds:", error);
-      }
+
+      // Fetch meter data even if collectors fail
+      Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vRPuL40wt_TX5FWcfwErPK3SEbj70OzqCZFzyBgtsEASoE55EP5SSo9FbV9KmC_MXlWnvosz6bkI8FU/pub?gid=0&single=true&output=csv", {
+        download: true,
+        header: false,
+        complete: function(results) {
+          const data = results.data.slice(14);
+          console.log("Raw Meter Data (Fallback):", data);
+          data.forEach((row, index) => {
+            console.log(`Raw Row ${index + 15}:`, row); // Log the entire row for debugging
+            const meterNumber = row[0]?.trim() || "N/A";
+            const address = row[1]?.trim() || "N/A";
+            const performance = parseFloat(row[3]?.trim());
+            const latRaw = row[7]?.trim();
+            const lonRaw = row[8]?.trim();
+            const lat = parseFloat(latRaw);
+            const lon = parseFloat(lonRaw);
+            console.log(`Processing Meter #${index + 1}: ${meterNumber} at [lat: ${latRaw} -> ${lat}, lon: ${lonRaw} -> ${lon}] with performance ${performance}%`);
+
+            if (!isNaN(lat) && !isNaN(lon) && !isNaN(performance)) {
+              if (lat >= 30.0 && lat <= 30.5 && lon >= -93.5 && lon <= -93.0) {
+                let markerClass;
+                if (performance === 0.00) {
+                  markerClass = 'meter-marker-red';
+                } else if (performance === 33.33) {
+                  markerClass = 'meter-marker-orange';
+                } else if (performance === 66.67) {
+                  markerClass = 'meter-marker-yellow';
+                } else {
+                  markerClass = 'meter-marker-default';
+                  console.warn(`Unexpected performance value ${performance} for meter ${meterNumber}`);
+                }
+
+                const meterEl = document.createElement("div");
+                meterEl.className = `meter-marker ${markerClass}`;
+                const popupContent = `
+                  <b>Meter: ${meterNumber}</b><br>
+                  Address: ${address}
+                `;
+                try {
+                  const marker = new mapboxgl.Marker({ element: meterEl })
+                    .setLngLat([lon, lat])
+                    .setPopup(new mapboxgl.Popup().setHTML(popupContent))
+                    .addTo(window.map);
+                  console.log(`Marker added for meter ${meterNumber} at [${lon}, ${lat}]`);
+                  meterMarkers.push({ marker, performance });
+                  bounds.extend([lon, lat]);
+                } catch (error) {
+                  console.error(`Failed to add marker for meter ${meterNumber}:`, error);
+                }
+              } else {
+                console.warn(`Meter ${meterNumber} has coordinates outside Lake Charles: [${lat}, ${lon}]`);
+              }
+            } else {
+              console.warn(`Skipping meter ${meterNumber}: Invalid lat(${latRaw} -> ${lat}), lon(${lonRaw} -> ${lon}), or performance(${performance})`);
+            }
+          });
+
+          if (!bounds.isEmpty()) {
+            window.map.fitBounds(bounds, { padding: 30, maxZoom: 11 });
+            console.log("Fallback map bounds adjusted for collectors and meters");
+          } else {
+            console.warn("No valid bounds calculated; using default view");
+          }
+
+          // Add event listener for meter filter in fallback case
+          const meterFilterSelect = document.getElementById("meter-filter");
+          meterFilterSelect.addEventListener("change", function(e) {
+            const filterValue = e.target.value;
+            console.log(`Filtering meters by: ${filterValue}`);
+            meterMarkers.forEach(({ marker, performance }) => {
+              if (filterValue === "all") {
+                marker.addTo(window.map);
+              } else if (filterValue === "none") {
+                marker.remove();
+              } else {
+                const filterPerformance = parseFloat(filterValue);
+                if (performance === filterPerformance) {
+                  marker.addTo(window.map);
+                } else {
+                  marker.remove();
+                }
+              }
+            });
+          });
+        },
+        error: function(error) {
+          console.error("Failed to fetch meter data in fallback:", error);
+          if (!bounds.isEmpty()) {
+            window.map.fitBounds(bounds, { padding: 30, maxZoom: 11 });
+            console.log("Fallback map bounds adjusted for collectors only");
+          }
+        }
+      });
     }
   });
 }
