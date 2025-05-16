@@ -315,18 +315,26 @@ table {
 }
 
 
-/* Clean, compressed table style for mobile */
+/* Fully redesigned table to fit mobile screens */
 @media screen and (max-width: 600px) {
   table {
-    font-size: 0.75em;
+    font-size: 0.72em;
     table-layout: fixed;
+    width: 100%;
   }
   th, td {
-    padding: 6px 4px;
+    padding: 4px;
+    overflow-wrap: break-word;
     word-wrap: break-word;
+    word-break: break-word;
   }
+  th:nth-child(1), td:nth-child(1) { width: 25%; } /* Collector Name */
+  th:nth-child(2), td:nth-child(2) { width: 20%; } /* Serial Number */
+  th:nth-child(3), td:nth-child(3) { width: 20%; } /* Last Contact */
+  th:nth-child(4), td:nth-child(4) { width: 35%; } /* Comments */
   .info {
     overflow-x: hidden;
+    padding: 8px;
   }
 }
 
