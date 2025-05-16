@@ -338,6 +338,21 @@ table {
   }
 }
 
+
+/* Extra compression for very narrow portrait phones */
+@media screen and (max-width: 480px) {
+  table {
+    font-size: 0.65em;
+  }
+  th, td {
+    padding: 3px 2px;
+  }
+  th:nth-child(1), td:nth-child(1) { width: 23%; }
+  th:nth-child(2), td:nth-child(2) { width: 17%; }
+  th:nth-child(3), td:nth-child(3) { width: 20%; }
+  th:nth-child(4), td:nth-child(4) { width: 40%; }
+}
+
 </style>
 </head>
 <body>
