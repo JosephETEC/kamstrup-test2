@@ -270,7 +270,51 @@
       header, nav, .nav-toggle, .modal { display: none !important; }
       div[style*="box-shadow"], .info { box-shadow: none !important; }
     }
-  </style>
+  
+/* Improve mobile nav and fix header */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+/* Responsive typography */
+h1, h2 {
+  font-size: clamp(1.2rem, 2.5vw, 2rem);
+}
+
+/* Improve padding on small screens */
+@media screen and (max-width: 600px) {
+  body {
+    padding: 10px;
+  }
+  .info {
+    padding: 10px;
+  }
+  .modal-content {
+    width: 95%;
+    margin: 10% auto;
+    padding: 10px;
+  }
+  #map, #meterMap {
+    height: 250px;
+  }
+  .modal-content button {
+    width: 100%;
+    margin: 5px 0;
+  }
+}
+
+/* Horizontal scroll for tables */
+.info {
+  overflow-x: auto;
+}
+table {
+  min-width: 500px;
+  width: 100%;
+}
+
+</style>
 </head>
 <body>
 <header>
