@@ -394,10 +394,40 @@ table {
 }
 
 </style>
+
+<style>
+  .nav-toggle {
+    display: none;
+    font-size: 1.5em;
+    color: white;
+    background: none;
+    border: none;
+    margin-left: auto;
+  }
+  @media screen and (max-width: 600px) {
+    nav {
+      flex-direction: column;
+      display: none;
+      width: 100%;
+    }
+    nav.show {
+      display: flex;
+    }
+    .nav-toggle {
+      display: block;
+    }
+  }
+</style>
+<script>
+  function toggleNav() {
+    const nav = document.querySelector("nav");
+    nav.classList.toggle("show");
+  }
+</script>
+
 </head>
 <body>
-<header>
-  <nav>
+<header><button class="nav-toggle" onclick="toggleNav()">☰</button><nav>
     <a href="index.html">Home</a>
     <a href="louisiana.html">Louisiana</a>
     <a href="bayou-liberty.html">Bayou Liberty</a>
