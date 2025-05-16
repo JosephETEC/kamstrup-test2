@@ -389,13 +389,32 @@ table {
 }
 
 
-/* Clean and readable 4-column layout for all mobile sizes */
+
+/* Final fix for clean mobile table layout */
 @media screen and (max-width: 600px) {
   table {
-    font-size: 0.75em;
+    font-size: 0.8em;
     table-layout: fixed;
     width: 100%;
+    border-collapse: collapse;
   }
+  th, td {
+    padding: 8px 6px;
+    white-space: normal;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    vertical-align: top;
+  }
+  th:nth-child(1), td:nth-child(1) { width: 24%; }
+  th:nth-child(2), td:nth-child(2) { width: 20%; }
+  th:nth-child(3), td:nth-child(3) { width: 22%; }
+  th:nth-child(4), td:nth-child(4) { width: 34%; }
+  .info {
+    padding: 10px;
+    overflow-x: auto;
+  }
+}
+
   th, td {
     padding: 6px 4px;
     word-wrap: break-word;
@@ -437,13 +456,32 @@ table {
     }
   }
 
-/* Clean and readable 4-column layout for all mobile sizes */
+
+/* Final fix for clean mobile table layout */
 @media screen and (max-width: 600px) {
   table {
-    font-size: 0.75em;
+    font-size: 0.8em;
     table-layout: fixed;
     width: 100%;
+    border-collapse: collapse;
   }
+  th, td {
+    padding: 8px 6px;
+    white-space: normal;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    vertical-align: top;
+  }
+  th:nth-child(1), td:nth-child(1) { width: 24%; }
+  th:nth-child(2), td:nth-child(2) { width: 20%; }
+  th:nth-child(3), td:nth-child(3) { width: 22%; }
+  th:nth-child(4), td:nth-child(4) { width: 34%; }
+  .info {
+    padding: 10px;
+    overflow-x: auto;
+  }
+}
+
   th, td {
     padding: 6px 4px;
     word-wrap: break-word;
