@@ -354,12 +354,7 @@ table {
 }
 
 
-/* Fully stacked table layout for extra-small portrait screens */
-@media screen and (max-width: 400px) {
-  table, thead, tbody, th, td, tr {
-    display: block;
-    width: 100%;
-  }
+
   thead {
     display: none;
   }
@@ -393,6 +388,30 @@ table {
   td:nth-of-type(4)::before { content: "Comments"; }
 }
 
+
+/* Clean and readable 4-column layout for all mobile sizes */
+@media screen and (max-width: 600px) {
+  table {
+    font-size: 0.75em;
+    table-layout: fixed;
+    width: 100%;
+  }
+  th, td {
+    padding: 6px 4px;
+    word-wrap: break-word;
+    white-space: normal;
+    overflow-wrap: break-word;
+  }
+  th:nth-child(1), td:nth-child(1) { width: 25%; }
+  th:nth-child(2), td:nth-child(2) { width: 20%; }
+  th:nth-child(3), td:nth-child(3) { width: 20%; }
+  th:nth-child(4), td:nth-child(4) { width: 35%; }
+  .info {
+    overflow-x: hidden;
+    padding: 10px;
+  }
+}
+
 </style>
 
 <style>
@@ -417,6 +436,30 @@ table {
       display: block;
     }
   }
+
+/* Clean and readable 4-column layout for all mobile sizes */
+@media screen and (max-width: 600px) {
+  table {
+    font-size: 0.75em;
+    table-layout: fixed;
+    width: 100%;
+  }
+  th, td {
+    padding: 6px 4px;
+    word-wrap: break-word;
+    white-space: normal;
+    overflow-wrap: break-word;
+  }
+  th:nth-child(1), td:nth-child(1) { width: 25%; }
+  th:nth-child(2), td:nth-child(2) { width: 20%; }
+  th:nth-child(3), td:nth-child(3) { width: 20%; }
+  th:nth-child(4), td:nth-child(4) { width: 35%; }
+  .info {
+    overflow-x: hidden;
+    padding: 10px;
+  }
+}
+
 </style>
 <script>
   function toggleNav() {
