@@ -244,7 +244,7 @@
       height: 5px;
       border-radius: 50%;
       border: 1px solid white;
-      opacity: 0.65; /* Set opacity to 65% */
+      opacity: 0.3 !important; /* Increased specificity and !important to enforce opacity */
     }
     .meter-marker-red {
       background-color: #FF0000;
@@ -689,7 +689,7 @@ function showMeterMapModal(infoCode) {
             const markerEl = document.createElement("div");
             markerEl.className = "custom-icon-online";
             markerEl.style.transform = "scale(0.5)";
-            new mapboxgl.Marker({ element: meterEl })
+            new mapboxgl.Marker({ element: markerEl })
               .setLngLat([lon, lat])
               .setPopup(new mapboxgl.Popup().setHTML(`<b>${name}</b><br>Collector Site`))
               .addTo(meterMapInstance);
@@ -1024,6 +1024,8 @@ function initializeMap() {
 
                 const meterEl = document.createElement("div");
                 meterEl.className = `meter-marker ${markerClass}`;
+                // Explicitly set opacity to ensure it persists
+                meterEl.style.opacity = "0.3";
                 const popupContent = `
                   <b>Meter: ${meterNumber}</b><br>
                   Address: ${address}
@@ -1033,6 +1035,8 @@ function initializeMap() {
                     .setLngLat([lon, lat])
                     .setPopup(new mapboxgl.Popup().setHTML(popupContent))
                     .addTo(window.map);
+                  // Ensure opacity is set after adding to map
+                  marker.getElement().style.opacity = "0.3";
                   console.log(`Marker added for meter ${meterNumber} at [${lon}, ${lat}]`);
                   // Store marker and its performance for filtering
                   meterMarkers.push({ marker, performance });
@@ -1064,12 +1068,14 @@ function initializeMap() {
             meterMarkers.forEach(({ marker, performance }) => {
               if (filterValue === "all") {
                 marker.addTo(window.map);
+                marker.getElement().style.opacity = "0.3"; // Reapply opacity after adding
               } else if (filterValue === "none") {
                 marker.remove();
               } else {
                 const filterPerformance = parseFloat(filterValue);
                 if (performance === filterPerformance) {
                   marker.addTo(window.map);
+                  marker.getElement().style.opacity = "0.3"; // Reapply opacity after adding
                 } else {
                   marker.remove();
                 }
@@ -1154,6 +1160,8 @@ function initializeMap() {
 
                 const meterEl = document.createElement("div");
                 meterEl.className = `meter-marker ${markerClass}`;
+                // Explicitly set opacity to ensure it persists
+                meterEl.style.opacity = "0.3";
                 const popupContent = `
                   <b>Meter: ${meterNumber}</b><br>
                   Address: ${address}
@@ -1163,6 +1171,8 @@ function initializeMap() {
                     .setLngLat([lon, lat])
                     .setPopup(new mapboxgl.Popup().setHTML(popupContent))
                     .addTo(window.map);
+                  // Ensure opacity is set after adding to map
+                  marker.getElement().style.opacity = "0.3";
                   console.log(`Marker added for meter ${meterNumber} at [${lon}, ${lat}]`);
                   meterMarkers.push({ marker, performance });
                   bounds.extend([lon, lat]);
@@ -1192,12 +1202,14 @@ function initializeMap() {
             meterMarkers.forEach(({ marker, performance }) => {
               if (filterValue === "all") {
                 marker.addTo(window.map);
+                marker.getElement().style.opacity = "0.3"; // Reapply opacity after adding
               } else if (filterValue === "none") {
                 marker.remove();
               } else {
                 const filterPerformance = parseFloat(filterValue);
                 if (performance === filterPerformance) {
                   marker.addTo(window.map);
+                  marker.getElement().style.opacity = "0.3"; // Reapply opacity after adding
                 } else {
                   marker.remove();
                 }
@@ -1216,22 +1228,6 @@ function initializeMap() {
     }
   });
 }
-document.addEventListener("DOMContentLoaded", function() {
-  initializeMap();
-  updateCollectorStatus();
-  updateReadingAndMissingData();
-  renderInfoCodeChart();
-  updateCollectorTable();
-});
-</script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93c1f03a6983bd00',t:'MTc0NjYzMzcxMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93eb2c84fd40bff1',t:'MTc0NzA2NjA5Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93ec0e5249f3bd17',t:'MTc0NzA3NTM0Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
-
-
-
-
-<script>
 document.addEventListener("DOMContentLoaded", function() {
   initializeMap();
   updateCollectorStatus();
@@ -1266,6 +1262,8 @@ document.addEventListener("DOMContentLoaded", function() {
   });
 });
 </script>
-
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93c1f03a6983bd00',t:'MTc0NjYzMzcxMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93eb2c84fd40bff1',t:'MTc0NzA2NjA5Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93ec0e5249f3bd17',t:'MTc0NzA3NTM0Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
 </body>
 </html>
