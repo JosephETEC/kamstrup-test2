@@ -1038,24 +1038,6 @@ function initializeMap() {
   });
 }
 document.addEventListener("DOMContentLoaded", function() {
-
-  document.getElementById("toggle-rings").addEventListener("change", function(e) {
-    const visible = e.target.checked;
-    const ringLayers = window.map.getStyle().layers?.filter(layer => layer.id.startsWith("ring-")) || [];
-    ringLayers.forEach(layer => {
-      window.map.setLayoutProperty(layer.id, "visibility", visible ? "visible" : "none");
-    });
-  });
-
-  window.map.on("style.load", () => {
-    renderRangeRings(window.map);
-    const visible = document.getElementById("toggle-rings").checked;
-    const ringLayers = window.map.getStyle().layers?.filter(layer => layer.id.startsWith("ring-")) || [];
-    ringLayers.forEach(layer => {
-      window.map.setLayoutProperty(layer.id, "visibility", visible ? "visible" : "none");
-    });
-  });
-
   initializeMap();
   updateCollectorStatus();
   updateReadingAndMissingData();
@@ -1072,6 +1054,20 @@ document.addEventListener("DOMContentLoaded", function() {
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
+  initializeMap();
+  updateCollectorStatus();
+  updateReadingAndMissingData();
+  renderInfoCodeChart();
+  updateCollectorTable();
+
+  const mapStyleSelect = document.getElementById("map-style");
+  if (mapStyleSelect) {
+    mapStyleSelect.addEventListener("change", function(e) {
+      if (window.map) {
+        window.map.setStyle("mapbox://styles/mapbox/" + e.target.value);
+      }
+    });
+  }
 
   document.getElementById("toggle-rings").addEventListener("change", function(e) {
     const visible = e.target.checked;
@@ -1088,24 +1084,6 @@ document.addEventListener("DOMContentLoaded", function() {
     ringLayers.forEach(layer => {
       window.map.setLayoutProperty(layer.id, "visibility", visible ? "visible" : "none");
     });
-  });
-
-  initializeMap();
-  updateCollectorStatus();
-  updateReadingAndMissingData();
-  renderInfoCodeChart();
-  updateCollectorTable();
-
-  const mapStyleSelect = document.getElementById("map-style");
-  if (mapStyleSelect) {
-    mapStyleSelect.addEventListener("change", function(e) {
-      if (window.map) {
-        window.map.setStyle("mapbox://styles/mapbox/" + e.target.value);
-      }
-    });
-  }
-
-  
   });
 });
 </script>
