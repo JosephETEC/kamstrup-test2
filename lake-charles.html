@@ -1229,6 +1229,9 @@ function initializeMap() {
   });
 }
 document.addEventListener("DOMContentLoaded", function() {
+  document.getElementById("meter-filter").value = "none";
+  document.getElementById("meter-filter").dispatchEvent(new Event("change"));
+
   initializeMap();
   updateCollectorStatus();
   updateReadingAndMissingData();
