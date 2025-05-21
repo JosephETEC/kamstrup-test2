@@ -980,7 +980,7 @@ function initializeMap() {
           new mapboxgl.Marker({ element: markerEl })
             .setLngLat([lon, lat])
             .setPopup(new mapboxgl.Popup().setHTML(popupContent))
-            ;// deferred add to map, controlled by filter
+            // deferred add to map based on filter
           console.log(`Marker added for collector ${name}`);
           bounds.extend([lon, lat]);
         } catch (error) {
@@ -1034,7 +1034,7 @@ function initializeMap() {
                   const marker = new mapboxgl.Marker({ element: meterEl })
                     .setLngLat([lon, lat])
                     .setPopup(new mapboxgl.Popup().setHTML(popupContent))
-                    ;// deferred add to map, controlled by filter
+                    // deferred add to map based on filter
                   // Ensure opacity is set after adding to map
                   marker.getElement().style.opacity = "0.3";
                   console.log(`Marker added for meter ${meterNumber} at [${lon}, ${lat}]`);
@@ -1067,14 +1067,14 @@ function initializeMap() {
             console.log(`Filtering meters by: ${filterValue}`);
             meterMarkers.forEach(({ marker, performance }) => {
               if (filterValue === "all") {
-                marker;// deferred add to map, controlled by filter
+                marker// deferred add to map based on filter
                 marker.getElement().style.opacity = "0.3"; // Reapply opacity after adding
               } else if (filterValue === "none") {
                 marker.remove();
               } else {
                 const filterPerformance = parseFloat(filterValue);
                 if (performance === filterPerformance) {
-                  marker;// deferred add to map, controlled by filter
+                  marker// deferred add to map based on filter
                   marker.getElement().style.opacity = "0.3"; // Reapply opacity after adding
                 } else {
                   marker.remove();
@@ -1118,7 +1118,7 @@ function initializeMap() {
           new mapboxgl.Marker({ element: markerEl })
             .setLngLat([lon, lat])
             .setPopup(new mapboxgl.Popup().setHTML(popupContent))
-            ;// deferred add to map, controlled by filter
+            // deferred add to map based on filter
           console.log(`Fallback marker added for collector ${name}`);
           bounds.extend([lon, lat]);
         } catch (error) {
@@ -1170,7 +1170,7 @@ function initializeMap() {
                   const marker = new mapboxgl.Marker({ element: meterEl })
                     .setLngLat([lon, lat])
                     .setPopup(new mapboxgl.Popup().setHTML(popupContent))
-                    ;// deferred add to map, controlled by filter
+                    // deferred add to map based on filter
                   // Ensure opacity is set after adding to map
                   marker.getElement().style.opacity = "0.3";
                   console.log(`Marker added for meter ${meterNumber} at [${lon}, ${lat}]`);
@@ -1201,14 +1201,14 @@ function initializeMap() {
             console.log(`Filtering meters by: ${filterValue}`);
             meterMarkers.forEach(({ marker, performance }) => {
               if (filterValue === "all") {
-                marker;// deferred add to map, controlled by filter
+                marker// deferred add to map based on filter
                 marker.getElement().style.opacity = "0.3"; // Reapply opacity after adding
               } else if (filterValue === "none") {
                 marker.remove();
               } else {
                 const filterPerformance = parseFloat(filterValue);
                 if (performance === filterPerformance) {
-                  marker;// deferred add to map, controlled by filter
+                  marker// deferred add to map based on filter
                   marker.getElement().style.opacity = "0.3"; // Reapply opacity after adding
                 } else {
                   marker.remove();
@@ -1231,7 +1231,6 @@ function initializeMap() {
 document.addEventListener("DOMContentLoaded", function() {
   document.getElementById("meter-filter").value = "none";
   document.getElementById("meter-filter").dispatchEvent(new Event("change"));
-
   initializeMap();
   updateCollectorStatus();
   updateReadingAndMissingData();
