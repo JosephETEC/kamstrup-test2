@@ -1,13 +1,14 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Louisiana Collector Towers</title>
-  <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet"/>
-  <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-  <style>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Louisiana Collector Towers</title>
+<link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet"/>
+<script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: #f4f4f4;
@@ -95,34 +96,33 @@
 </head>
 <body>
 <header>
-  <nav>
-    <a href="index.html">Home</a>
-    <a href="louisiana.html">Louisiana</a>
-    <a href="bayou-liberty.html">Bayou Liberty</a>
-    <a href="hessmer.html">Hessmer</a>
-    <a href="homer.html">Homer</a>
-    <a href="lake-charles.html">Lake Charles</a>
-    <a href="shreveport.html">Shreveport</a>
-    <a href="westwego.html">Westwego</a>
-  </nav>
+<nav>
+<a href="index.html">Home</a>
+<a href="louisiana.html">Louisiana</a>
+<a href="bayou-liberty.html">Bayou Liberty</a>
+<a href="hessmer.html">Hessmer</a>
+<a href="homer.html">Homer</a>
+<a href="lake-charles.html">Lake Charles</a>
+<a href="shreveport.html">Shreveport</a>
+<a href="westwego.html">Westwego</a>
+</nav>
 </header>
-
 <h1>Louisiana Collector Tower Information</h1>
 <div class="info">
-  <p>Click pins to see collector locations. Green pins = all online; red pins = issue.</p>
-  <div id="map"></div>
-  <div class="map-style-toggle">
-    <button id="streetsBtn" class="active">Streets</button>
-    <button id="satelliteBtn">Satellite</button>
-  </div>
-  <p><a href="index.html" style="color:#2c5782; text-decoration: underline;">← Back to Dashboard</a></p>
+<p>Click pins to see collector locations. Green pins = all online; red pins = issue.</p>
+<div id="map"></div>
+<div class="map-style-toggle">
+<button class="active" id="streetsBtn">Streets</button>
+<button id="satelliteBtn">Satellite</button>
 </div>
-
+<p><a href="index.html" style="color:#2c5782; text-decoration: underline;">← Back to Dashboard</a></p>
+</div>
 <script>
   mapboxgl.accessToken = 'pk.eyJ1Ijoiam9zZXBoLWhlYmVydCIsImEiOiJjbWF5ZG0wcTYwODJmMmxwdDI1MjNxenVlIn0.DPzjMzumd_bBfVS0Rqs3Xw';
 
   let currentStyle = 'mapbox://styles/mapbox/streets-v12';
-  const map = new mapboxgl.Map({
+  let bounds = new mapboxgl.LngLatBounds();
+const map = new mapboxgl.Map({
     container: 'map',
     style: currentStyle,
     center: [-92.1, 31.2],
@@ -167,6 +167,7 @@
           const hasIssue = cityCollectors.some(row => row["Collector Issue"]?.trim() === "Yes");
           const color = hasIssue ? 'red' : 'green';
           const status = hasIssue ? 'One or more offline' : 'All online';
+          bounds.extend([loc.lon, loc.lat]);
           addMarker(loc.lat, loc.lon, color,
             `<a href='${loc.link}' target='_blank'>${loc.name}</a><br>Status: ${status}`
           );
@@ -179,8 +180,10 @@
   }
 
   updateMap();
+  map.on('load', () => map.fitBounds(bounds, { padding: 40 }));
   setInterval(() => {
     updateMap();
+  map.on('load', () => map.fitBounds(bounds, { padding: 40 }));
   }, 30000);
 
   document.getElementById('streetsBtn').onclick = () => {
