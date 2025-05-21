@@ -174,7 +174,7 @@ const map = new mapboxgl.Map({
           const status = hasIssue ? 'One or more offline' : 'All online';
           bounds.extend([loc.lon, loc.lat]);
           addMarker(loc.lat, loc.lon, color,
-            `<a href='${loc.link}' target='_blank'>${loc.name}</a><br>Status: ${status}`
+            `<a href='${loc.link}' >${loc.name}</a><br>Status: ${status}`
           );
         });
       },
