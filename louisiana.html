@@ -1,50 +1,11 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
-  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Louisiana Collector Towers</title>
-  <link href="https://unpkg.com/leaflet/dist/leaflet.css" rel="stylesheet"/>
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet"/>
+  <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <style>
     body {
@@ -73,100 +34,62 @@
       color: white;
       text-decoration: none;
       font-weight: 500;
-      transition: color 0.2s ease;
-    }
-    nav a:hover {
-      text-decoration: underline;
     }
     h1 {
       font-size: 1.7em;
       margin-bottom: 20px;
     }
     .info {
-      font-size: 1.1em;
       background: white;
       padding: 20px;
       border-radius: 10px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      display: inline-block;
       margin-bottom: 20px;
-      overflow-x: auto;
-    }
-    table {
-      border-collapse: collapse;
+      display: inline-block;
       width: 100%;
-      max-width: 800px;
-      margin: 0 auto;
-    }
-    th, td {
-      border: 1px solid #000;
-      padding: 8px;
-      text-align: center;
-    }
-    th {
-      background-color: #e0e0e0;
+      max-width: 850px;
     }
     #map {
       height: 400px;
       width: 100%;
-      max-width: 800px;
       margin: 20px auto;
       border-radius: 10px;
     }
-    .city-card {
-      width: 200px;
-      height: 200px;
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+    .mapboxgl-marker {
+      border-radius: 50%;
+      border: 2px solid white;
+      width: 20px;
+      height: 20px;
+    }
+    .marker.green { background-color: #10b981; }
+    .marker.red { background-color: #e11d48; }
+
+    .map-style-toggle {
+      margin-top: 10px;
       display: flex;
-      flex-direction: column;
       justify-content: center;
-      align-items: center;
-      font-size: 1em;
-      text-align: center;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-      margin: 10px;
+      gap: 10px;
     }
-    .city-card:hover {
-      transform: scale(1.05);
-      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+
+    .map-style-toggle button {
+      background: #2c5782;
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
     }
-    canvas.donut {
-      max-width: 80px;
-      max-height: 80px;
-      margin-top: 8px;
+
+    .map-style-toggle button.active {
+      background: #10b981;
     }
-    .performance-container {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 24px;
-      padding: 30px 20px;
-    }
+
     @media screen and (max-width: 600px) {
-      body {
-        padding: 20px;
-      }
-      .city-card {
-        width: 140px;
-        height: 140px;
-        font-size: 0.8em;
-      }
-      canvas.donut {
-        max-width: 60px;
-        max-height: 60px;
-      }
-      table {
-        font-size: 0.9em;
-      }
-      h1 {
-        font-size: 1.4em;
-      }
-      nav {
-        flex-direction: column;
-        gap: 10px;
-      }
+      body { padding: 20px; }
+      nav { flex-direction: column; gap: 10px; }
+      h1 { font-size: 1.4em; }
+      #map { height: 300px; }
     }
   </style>
 </head>
@@ -183,31 +106,30 @@
     <a href="westwego.html">Westwego</a>
   </nav>
 </header>
+
 <h1>Louisiana Collector Tower Information</h1>
 <div class="info">
-  <p>Click pins to see collector locations. Green pins indicate all collectors are online; red pins indicate one or more collectors are offline.</p>
+  <p>Click pins to see collector locations. Green pins = all online; red pins = issue.</p>
   <div id="map"></div>
+  <div class="map-style-toggle">
+    <button id="streetsBtn" class="active">Streets</button>
+    <button id="satelliteBtn">Satellite</button>
+  </div>
   <p><a href="index.html" style="color:#2c5782; text-decoration: underline;">← Back to Dashboard</a></p>
 </div>
+
 <script>
-  var map = L.map('map').setView([31.2, -92.1], 7);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: 'Map data © <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
-  }).addTo(map);
-  var greenIcon = L.divIcon({
-    className: 'custom-icon',
-    html: '<div style="background-color: #10b981; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white;"></div>',
-    iconSize: [20, 20],
-    iconAnchor: [10, 10]
+  mapboxgl.accessToken = 'pk.eyJ1Ijoiam9zZXBoLWhlYmVydCIsImEiOiJjbWF5ZG0wcTYwODJmMmxwdDI1MjNxenVlIn0.DPzjMzumd_bBfVS0Rqs3Xw';
+
+  let currentStyle = 'mapbox://styles/mapbox/streets-v12';
+  const map = new mapboxgl.Map({
+    container: 'map',
+    style: currentStyle,
+    center: [-92.1, 31.2],
+    zoom: 7
   });
-  var redIcon = L.divIcon({
-    className: 'custom-icon',
-    html: '<div style="background-color: #e11d48; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white;"></div>',
-    iconSize: [20, 20],
-    iconAnchor: [10, 10]
-  });
-  var markerLayer = L.layerGroup().addTo(map); // Layer group to manage markers
-  var locations = [
+
+  const locations = [
     { lat: 30.2783, lon: -89.8018, name: "Bayou Liberty Tower", city: "Bayou Liberty", link: "bayou-liberty.html" },
     { lat: 31.0552, lon: -92.1182, name: "Hessmer Tower", city: "Hessmer", link: "hessmer.html" },
     { lat: 32.7915, lon: -93.0557, name: "Homer Tower", city: "Homer", link: "homer.html" },
@@ -215,52 +137,63 @@
     { lat: 32.5252, lon: -93.7502, name: "Shreveport Tower", city: "Shreveport", link: "shreveport.html" },
     { lat: 29.9069, lon: -90.1423, name: "Westwego Tower", city: "Westwego", link: "westwego.html" }
   ];
+
+  let markers = [];
+
+  function addMarker(lat, lon, colorClass, popupHTML) {
+    const el = document.createElement('div');
+    el.className = `marker ${colorClass}`;
+    const marker = new mapboxgl.Marker(el)
+      .setLngLat([lon, lat])
+      .setPopup(new mapboxgl.Popup().setHTML(popupHTML))
+      .addTo(map);
+    markers.push(marker);
+  }
+
+  function clearMarkers() {
+    markers.forEach(m => m.remove());
+    markers = [];
+  }
+
   function updateMap() {
     Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=96572475&single=true&output=csv", {
       download: true,
       header: true,
       complete: function(results) {
+        clearMarkers();
         const data = results.data;
-        console.log("Raw Data:", data);
-        const header = results.meta.fields;
-        console.log("Header Row:", header);
-        // Clear existing markers
-        markerLayer.clearLayers();
-        // Process each city
-        locations.forEach(location => {
-          const cityCollectors = data.filter(row => row["City"]?.trim().toLowerCase() === location.city.toLowerCase());
-          console.log(`City: ${location.city}, Collectors:`, cityCollectors);
-          // Log the Collector Issue values for debugging
-          const issueValues = cityCollectors.map(collector => collector["Collector Issue"]?.trim());
-          console.log(`City: ${location.city}, Collector Issue Values:`, issueValues);
-          // Check if any collector has an issue
-          const hasIssue = cityCollectors.some(collector => collector["Collector Issue"]?.trim() === "Yes");
-          if (cityCollectors.length === 0) {
-            console.warn(`No collectors found for city: ${location.city}`);
-          }
-          const icon = (cityCollectors.length === 0 || !hasIssue) ? greenIcon : redIcon;
-          const marker = L.marker([location.lat, location.lon], { icon: icon }).bindPopup(
-            `<a href='${location.link}' target='_blank'>${location.name}</a><br>Status: ${hasIssue ? 'One or more offline' : 'All online'}`
+        locations.forEach(loc => {
+          const cityCollectors = data.filter(row => row["City"]?.trim().toLowerCase() === loc.city.toLowerCase());
+          const hasIssue = cityCollectors.some(row => row["Collector Issue"]?.trim() === "Yes");
+          const color = hasIssue ? 'red' : 'green';
+          const status = hasIssue ? 'One or more offline' : 'All online';
+          addMarker(loc.lat, loc.lon, color,
+            `<a href='${loc.link}' target='_blank'>${loc.name}</a><br>Status: ${status}`
           );
-          markerLayer.addLayer(marker);
         });
       },
       error: function(error) {
-        console.error("Failed to fetch collector data from Google Sheet:", error);
-        markerLayer.clearLayers();
-        locations.forEach(location => {
-          const marker = L.marker([location.lat, location.lon], { icon: greenIcon }).bindPopup(
-            `<a href='${location.link}' target='_blank'>${location.name}</a><br>Status: Online (Error)`
-          );
-          markerLayer.addLayer(marker);
-        });
+        console.error("Failed to fetch collector data:", error);
       }
     });
   }
-  // Initial map update
+
   updateMap();
-  // Update map every 30 seconds
-  setInterval(updateMap, 30000);
+  setInterval(() => {
+    updateMap();
+  }, 30000);
+
+  document.getElementById('streetsBtn').onclick = () => {
+    map.setStyle('mapbox://styles/mapbox/streets-v12');
+    document.getElementById('streetsBtn').classList.add('active');
+    document.getElementById('satelliteBtn').classList.remove('active');
+  };
+
+  document.getElementById('satelliteBtn').onclick = () => {
+    map.setStyle('mapbox://styles/mapbox/satellite-streets-v12');
+    document.getElementById('satelliteBtn').classList.add('active');
+    document.getElementById('streetsBtn').classList.remove('active');
+  };
 </script>
 </body>
 </html>
