@@ -234,7 +234,6 @@
 <div id="map"></div>
 <p><a href="index.html" style="color:#2c5782; text-decoration: underline;">← Back to Dashboard</a></p>
 </div>
-
 <script>
 mapboxgl.accessToken = 'pk.eyJ1Ijoiam9zZXBoLWhlYmVydCIsImEiOiJjbWF5ZG0wcTYwODJmMmxwdDI1MjNxenVlIn0.DPzjMzumd_bBfVS0Rqs3Xw';
 const map = new mapboxgl.Map({
@@ -262,8 +261,13 @@ const locations = [
   { lat: 33.4957, lon: -88.4273, name: "Columbus Tower", city: "Columbus", link: "columbus.html" },
   { lat: 30.3946, lon: -89.3639, name: "Diamondhead Tower", city: "Diamondhead", link: "diamondhead.html" },
   { lat: 32.2988, lon: -90.1848, name: "Jackson Tower", city: "Jackson", link: "jackson.html" },
-  { lat: 34.0018, lon: -88.7553, name: "Okolona Tower", city: "Okolona", link: "okolona.html" }
+  { lat: 34.0018, lon: -88.7553, name: "Okolona Tower", city: "Okolona", link: "okolona.html" },
+  { lat: 30.4202, lon: -88.5292, name: "Moss Point Tower", city: "Moss Point", link: "mosspoint.html" }
 ];
+
+const bounds = new mapboxgl.LngLatBounds();
+    locations.forEach(loc => bounds.extend([loc.lon, loc.lat]));
+    map.fitBounds(bounds, { padding: 60 });
 
 Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=11820546&single=true&output=csv", {
   download: true,
@@ -280,7 +284,6 @@ Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1
   }
 });
 </script>
-
 <script>
     function toggleMenu() {
         const wrapper = document.querySelector('.nav-wrapper');
