@@ -220,7 +220,7 @@
         return obj;
       });
       const laCities = ['Bayou Liberty', 'Hessmer', 'Homer', 'Lake Charles', 'Shreveport', 'Westwego'];
-      const msCities = ['Columbus', 'Diamondhead', 'Jackson', 'Okolona'];
+      const msCities = ['Columbus', 'Diamondhead', 'Jackson', 'Moss Point', 'Okolona'];
       const formatEntry = (e) => `<p><strong>${e.City}:</strong> ${e["Collector Name"]}, S/N: ${e["Serial Number"]}, Last Contact: ${e["Last Contact"]}, Comments: ${e.Comments}</p>`;
       const laIssues = data.filter(e => e["Collector Issue"] === "Yes" && laCities.includes(e.City));
 
