@@ -38,15 +38,16 @@
         return gk_fileData[filename] || "";
         }
         </script><!DOCTYPE html>
+
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-  <title>Mississippi Collector Towers</title>
-  <link href="https://unpkg.com/leaflet/dist/leaflet.css" rel="stylesheet"/>
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-  <style>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mississippi Collector Towers</title>
+<link href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css" rel="stylesheet"/>
+<script src="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: #f4f4f4;
@@ -168,95 +169,122 @@
         gap: 10px;
       }
     }
-  </style>
+  
+        .nav-wrapper {
+            position: relative;
+        }
+        
+            .nav-wrapper.active nav {
+                display: flex;
+            }
+            
+            .nav-wrapper.active nav {
+                display: flex;
+            }
+            .hamburger {
+                display: flex;
+            }
+        }
+        
+        .nav-wrapper {
+            position: relative;
+        }
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            cursor: pointer;
+            padding: 10px;
+        }
+        .hamburger div {
+            width: 25px;
+            height: 3px;
+            background-color: white;
+            margin: 4px 0;
+        }
+        @media (max-width: 768px) {
+            nav {
+                display: none;
+                flex-direction: column;
+                background-color: #2c5782;
+                padding: 10px 0;
+            }
+            .nav-wrapper.active nav {
+                display: flex;
+            }
+            .hamburger {
+                display: flex;
+            }
+        }
+        </style>
 </head>
 <body>
 <header>
-  <nav>
-    <a href="index.html">Home</a>
-    <a href="mississippi.html">Mississippi</a>
-    <a href="columbus.html">Columbus</a>
-    <a href="diamondhead.html">Diamondhead</a>
-    <a href="jackson.html">Jackson</a>
-    <a href="okolona.html">Okolona</a>
-  </nav>
+<div class="nav-wrapper"><div class="hamburger" onclick="toggleMenu()"><div></div><div></div><div></div></div><nav>
+<a href="index.html">Home</a>
+<a href="mississippi.html">Mississippi</a>
+<a href="columbus.html">Columbus</a>
+<a href="diamondhead.html">Diamondhead</a>
+<a href="jackson.html">Jackson</a>
+<a href="okolona.html">Okolona</a>
+</nav></div>
 </header>
 <h1>Mississippi Collector Tower Information</h1>
 <div class="info">
-  <p>Click pins to see collector locations. Green pins indicate all collectors are online; red pins indicate one or more collectors are offline.</p>
-  <div id="map"></div>
-  <p><a href="index.html" style="color:#2c5782; text-decoration: underline;">← Back to Dashboard</a></p>
+<p>Click pins to see collector locations. Green pins indicate all collectors are online; red pins indicate one or more collectors are offline.</p>
+<div id="map"></div>
+<p><a href="index.html" style="color:#2c5782; text-decoration: underline;">← Back to Dashboard</a></p>
 </div>
+
 <script>
-  var map = L.map('map').setView([32.1982, -89.30605], 6);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: 'Map data © <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
-  }).addTo(map);
-  var greenIcon = L.divIcon({
-    className: 'custom-icon',
-    html: '<div style="background-color: #10b981; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white;"></div>',
-    iconSize: [20, 20],
-    iconAnchor: [10, 10]
-  });
-  var redIcon = L.divIcon({
-    className: 'custom-icon',
-    html: '<div style="background-color: #e11d48; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white;"></div>',
-    iconSize: [20, 20],
-    iconAnchor: [10, 10]
-  });
-  var markerLayer = L.layerGroup().addTo(map); // Layer group to manage markers
-  var locations = [
-    { lat: 33.4957, lon: -88.4273, name: "Columbus Tower", city: "Columbus", link: "columbus.html" },
-    { lat: 30.3946, lon: -89.3639, name: "Diamondhead Tower", city: "Diamondhead", link: "diamondhead.html" },
-    { lat: 32.2988, lon: -90.1848, name: "Jackson Tower", city: "Jackson", link: "jackson.html" },
-    { lat: 34.0018, lon: -88.7553, name: "Okolona Tower", city: "Okolona", link: "okolona.html" }
-  ];
-  function updateMap() {
-    Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=11820546&single=true&output=csv", {
-      download: true,
-      header: true,
-      complete: function(results) {
-        const data = results.data;
-        console.log("Raw Data:", data);
-        const header = results.meta.fields;
-        console.log("Header Row:", header);
-        // Clear existing markers
-        markerLayer.clearLayers();
-        // Process each city
-        locations.forEach(location => {
-          const cityCollectors = data.filter(row => row["City"]?.trim().toLowerCase() === location.city.toLowerCase());
-          console.log(`City: ${location.city}, Collectors:`, cityCollectors);
-          // Log the Collector Issue values for debugging
-          const issueValues = cityCollectors.map(collector => collector["Collector Issue"]?.trim());
-          console.log(`City: ${location.city}, Collector Issue Values:`, issueValues);
-          // Check if any collector has an issue
-          const hasIssue = cityCollectors.some(collector => collector["Collector Issue"]?.trim() === "Yes");
-          if (cityCollectors.length === 0) {
-            console.warn(`No collectors found for city: ${location.city}`);
-          }
-          const icon = (cityCollectors.length === 0 || !hasIssue) ? greenIcon : redIcon;
-          const marker = L.marker([location.lat, location.lon], { icon: icon }).bindPopup(
-            `<a href='${location.link}' target='_blank'>${location.name}</a><br>Status: ${hasIssue ? 'One or more offline' : 'All online'}`
-          );
-          markerLayer.addLayer(marker);
-        });
-      },
-      error: function(error) {
-        console.error("Failed to fetch collector data from Google Sheet:", error);
-        markerLayer.clearLayers();
-        locations.forEach(location => {
-          const marker = L.marker([location.lat, location.lon], { icon: greenIcon }).bindPopup(
-            `<a href='${location.link}' target='_blank'>${location.name}</a><br>Status: Online (Error)`
-          );
-          markerLayer.addLayer(marker);
-        });
-      }
+mapboxgl.accessToken = 'pk.eyJ1Ijoiam9zZXBoLWhlYmVydCIsImEiOiJjbWF5ZG0wcTYwODJmMmxwdDI1MjNxenVlIn0.DPzjMzumd_bBfVS0Rqs3Xw';
+const map = new mapboxgl.Map({
+  container: 'map',
+  style: 'mapbox://styles/mapbox/streets-v12',
+  center: [-89.30605, 32.1982],
+  zoom: 6
+});
+
+function createMarker(lat, lon, color, popupHtml) {
+  const el = document.createElement('div');
+  el.style.backgroundColor = color;
+  el.style.width = '20px';
+  el.style.height = '20px';
+  el.style.borderRadius = '50%';
+  el.style.border = '2px solid white';
+
+  new mapboxgl.Marker(el)
+    .setLngLat([lon, lat])
+    .setPopup(new mapboxgl.Popup().setHTML(popupHtml))
+    .addTo(map);
+}
+
+const locations = [
+  { lat: 33.4957, lon: -88.4273, name: "Columbus Tower", city: "Columbus", link: "columbus.html" },
+  { lat: 30.3946, lon: -89.3639, name: "Diamondhead Tower", city: "Diamondhead", link: "diamondhead.html" },
+  { lat: 32.2988, lon: -90.1848, name: "Jackson Tower", city: "Jackson", link: "jackson.html" },
+  { lat: 34.0018, lon: -88.7553, name: "Okolona Tower", city: "Okolona", link: "okolona.html" }
+];
+
+Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=11820546&single=true&output=csv", {
+  download: true,
+  header: true,
+  complete: function(results) {
+    const data = results.data;
+    locations.forEach(location => {
+      const cityCollectors = data.filter(row => row["City"]?.trim().toLowerCase() === location.city.toLowerCase());
+      const hasIssue = cityCollectors.some(collector => collector["Collector Issue"]?.trim() === "Yes");
+      const color = (cityCollectors.length === 0 || !hasIssue) ? "#10b981" : "#e11d48";
+      const popupHtml = `<a href='${location.link}' target='_blank'>${location.name}</a><br>Status: ${hasIssue ? 'One or more offline' : 'All online'}`;
+      createMarker(location.lat, location.lon, color, popupHtml);
     });
   }
-  // Initial map update
-  updateMap();
-  // Update map every 30 seconds
-  setInterval(updateMap, 30000);
+});
 </script>
-</body>
+
+<script>
+    function toggleMenu() {
+        const wrapper = document.querySelector('.nav-wrapper');
+        wrapper.classList.toggle('active');
+    }
+    </script></body>
 </html>
