@@ -264,7 +264,10 @@ async function fetchChartData() {
 
   chartData.forEach(city => {
     const div = document.createElement('div');
-    div.className = 'city-card';
+div.className = 'city-card';
+if (citiesWithIssues.has(city.city)) {
+  div.style.backgroundColor = '#ffdddd';
+}
     div.onclick = () => showCityInfo(city.city);
     div.innerHTML = `<div><strong style=\"font-size: 1.4em;\">${city.city}</strong><br><span style=\"font-weight:bold; display:block; margin-top: 4px;\">${city.value.toFixed(2)}%</span><canvas id=\"${city.id}\" class=\"donut\"></canvas>${citiesWithIssues.has(city.city) ? '<div class=\"blinking-alert\">⚠️</div>' : ''}</div>`;
 
