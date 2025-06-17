@@ -173,78 +173,81 @@
 <a href="index.html" style="display: inline-block; background-color: #2c5782; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; font-weight: 500;">← Back to Dashboard</a>
 </div>
 <script>
-  mapboxgl.accessToken = 'pk.eyJ1Ijoiam9zZXBoLWhlYmVydCIsImEiOiJjbWF5ZG0wcTYwODJmMmxwdDI1MjNxenVlIn0.DPzjMzumd_bBfVS0Rqs3Xw';
+let markers = [];
+let bounds = new mapboxgl.LngLatBounds();
 
-  let currentStyle = 'mapbox://styles/mapbox/streets-v12';
-  let bounds = new mapboxgl.LngLatBounds();
-const map = new mapboxgl.Map({
-    container: 'map',
-    style: currentStyle,
-    center: [-92.1, 31.2],
-    zoom: 5.8
-});
+function addMarker(lat, lon, colorClass, popupHTML) {
+  const el = document.createElement('div');
+  el.className = `marker ${colorClass}`;
+  const marker = new mapboxgl.Marker(el)
+    .setLngLat([lon, lat])
+    .setPopup(new mapboxgl.Popup().setHTML(popupHTML))
+    .addTo(map);
+  markers.push(marker);
+}
 
-  
+function clearMarkers() {
+  markers.forEach(m => m.remove());
+  markers = [];
+}
 
-  let markers = [];
+function updateMap() {
+  console.log("Loading collector and location data...");
+  Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=96572475&single=true&output=csv", {
+    download: true,
+    header: true,
+    complete: function(results) {
+      const collectorData = results.data;
+      console.log("Collector data loaded:", collectorData);
 
-  function addMarker(lat, lon, colorClass, popupHTML) {
-    const el = document.createElement('div');
-    el.className = `marker ${colorClass}`;
-    const marker = new mapboxgl.Marker(el)
-      .setLngLat([lon, lat])
-      .setPopup(new mapboxgl.Popup().setHTML(popupHTML))
-      .addTo(map);
-    markers.push(marker);
-  }
+      Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vSV38dO4UHsnXyLVAho45wIjgyoQXI3geoEmhKeyU_OFLbRu3PQi1s9SOtKRvQPSMFTxrjL0obEQqBZ/pub?gid=0&single=true&output=csv", {
+        download: true,
+        header: true,
+        complete: function(locResults) {
+          clearMarkers();
+          const locations = locResults.data;
+          console.log("Location data loaded:", locations);
 
-  function clearMarkers() {
-    markers.forEach(m => m.remove());
-    markers = [];
-  }
+          let added = 0;
+          locations.forEach(loc => {
+            const lat = parseFloat(loc.Latitude);
+            const lon = parseFloat(loc.Longitude);
+            const city = loc.City?.trim().toLowerCase();
+            const link = loc["Page Link"];
+            const name = loc["Display Name"];
 
-  function updateMap() {
-    Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=96572475&single=true&output=csv", {
-      download: true,
-      header: true,
-      complete: function(results) {
-        clearMarkers();
-        const data = results.data;
-        locations.forEach(loc => {
-          const cityCollectors = data.filter(row => row["City"]?.trim().toLowerCase() === loc.city.toLowerCase());
-          const hasIssue = cityCollectors.some(row => row["Collector Issue"]?.trim() === "Yes");
-          const color = hasIssue ? 'red' : 'green';
-          const status = hasIssue ? 'One or more offline' : 'All online';
-          bounds.extend([loc.lon, loc.lat]);
-          addMarker(loc.lat, loc.lon, color,
-            `<a href='${loc.link}' >${loc.name}</a><br>Status: ${status}`
-          );
-        });
-      },
-      error: function(error) {
-        console.error("Failed to fetch collector data:", error);
-      }
-    });
-  }
+            if (!lat || !lon || !city || !link || !name) {
+              console.warn("Skipping invalid row:", loc);
+              return;
+            }
 
-  updateMap();
-  map.on('load', () => map.fitBounds(bounds, { padding: 40 }));
-  setInterval(() => {
-    updateMap();
-  map.on('load', () => map.fitBounds(bounds, { padding: 40 }));
-  }, 30000);
+            const cityCollectors = collectorData.filter(row =>
+              row["City"]?.trim().toLowerCase() === city
+            );
+            const hasIssue = cityCollectors.some(row =>
+              row["Collector Issue"]?.trim() === "Yes"
+            );
+            const color = hasIssue ? 'red' : 'green';
+            const status = hasIssue ? 'One or more offline' : 'All online';
 
-  document.getElementById('streetsBtn').onclick = () => {
-    map.setStyle('mapbox://styles/mapbox/streets-v12');
-    document.getElementById('streetsBtn').classList.add('active');
-    document.getElementById('satelliteBtn').classList.remove('active');
-  };
+            bounds.extend([lon, lat]);
+            addMarker(lat, lon, color, `<a href='${link}' >${name}</a><br>Status: ${status}`);
+            added++;
+          });
 
-  document.getElementById('satelliteBtn').onclick = () => {
-    map.setStyle('mapbox://styles/mapbox/satellite-streets-v12');
-    document.getElementById('satelliteBtn').classList.add('active');
-    document.getElementById('streetsBtn').classList.remove('active');
-  };
+          if (added > 0) {
+            map.fitBounds(bounds, { padding: 40 });
+          } else {
+            console.warn("No valid locations to display.");
+          }
+        }
+      });
+    }
+  });
+}
+
+updateMap();
+setInterval(updateMap, 30000);
 </script>
 <script>
     function toggleMenu() {
