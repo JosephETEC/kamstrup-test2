@@ -52,7 +52,7 @@
     }
 
     map.on('load', () => {
-      Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vSV38dO4UHsnXyLVAho45wIjgyoQXI3geoEmhKeyU_OFLbRu3PQi1s9SOtKRvQPSMFTxrjL0obEQqBZ/pub?gid=0&single=true&output=csv", {
+      Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vSV38dO4UHsnXyLVAho45wIjgyoQXI3geoEmhKeyU_OFLbRu3PQi1s9SOtKRvQPSMFTxrjL0obEQqBZ/pub?gid=0&single=true&output=csv&t=" + new Date().getTime(), {
         download: true,
         header: true,
         complete: function(results) {
