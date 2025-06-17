@@ -31,54 +31,72 @@
 </header>
 </header>
 <div id="map"></div><div style="text-align:center; margin: 20px;"><a href="index.html" style="display:inline-block; padding:10px 20px; background:#2c5782; color:white; text-decoration:none; border-radius:5px;">← Back to Kamstrup Health Report</a></div>
-<script>
-    mapboxgl.accessToken = 'pk.eyJ1Ijoiam9zZXBoLWhlYmVydCIsImEiOiJjbWF5ZG0wcTYwODJmMmxwdDI1MjNxenVlIn0.DPzjMzumd_bBfVS0Rqs3Xw';
-    const map = new mapboxgl.Map({
-      container: 'map',
-      style: 'mapbox://styles/mapbox/streets-v12',
-      center: [-92.1, 31.2],
-      zoom: 5.8
-    });
+<script>mapboxgl.accessToken = 'pk.eyJ1Ijoiam9zZXBoLWhlYmVydCIsImEiOiJjbWF5ZG0wcTYwODJmMmxwdDI1MjNxenVlIn0.DPzjMzumd_bBfVS0Rqs3Xw';
 
-    const bounds = new mapboxgl.LngLatBounds();
+const map = new mapboxgl.Map({
+  container: 'map',
+  style: 'mapbox://styles/mapbox/streets-v12',
+  center: [-92.1, 31.2],
+  zoom: 5.8
+});
 
-    function addMarker(lat, lon, popupHTML, isOnline) {
-      const el = document.createElement('div');
-      el.className = 'marker ' + (isOnline ? 'green' : 'red');
-      new mapboxgl.Marker(el)
-        .setLngLat([lon, lat])
-        .setPopup(new mapboxgl.Popup().setHTML(popupHTML))
-        .addTo(map);
-      bounds.extend([lon, lat]);
-    }
+const bounds = new mapboxgl.LngLatBounds();
+let markers = [];
 
-    map.on('load', () => {
+function addMarker(lat, lon, popupHTML, isOnline) {
+  const el = document.createElement('div');
+  el.className = 'marker ' + (isOnline ? 'green' : 'red');
+  new mapboxgl.Marker(el)
+    .setLngLat([lon, lat])
+    .setPopup(new mapboxgl.Popup().setHTML(popupHTML))
+    .addTo(map);
+  bounds.extend([lon, lat]);
+}
+
+map.on('load', () => {
+  // First load collector status
+  Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=96572475&single=true&output=csv&t=" + new Date().getTime(), {
+    download: true,
+    header: true,
+    complete: function(collectorResults) {
+      const collectorData = collectorResults.data;
+
+      // Then load location and nav pin data
       Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vSV38dO4UHsnXyLVAho45wIjgyoQXI3geoEmhKeyU_OFLbRu3PQi1s9SOtKRvQPSMFTxrjL0obEQqBZ/pub?gid=0&single=true&output=csv&t=" + new Date().getTime(), {
         download: true,
         header: true,
-        complete: function(results) {
-          const rows = results.data;
+        complete: function(locationResults) {
+          const locations = locationResults.data;
           let hasValid = false;
-          rows.forEach(row => {
+
+          locations.forEach(row => {
             const lat = parseFloat(row.Latitude);
             const lon = parseFloat(row.Longitude);
             const name = row["Display Name"];
             const link = row["Page Link"];
-            const status = row["Status"] || "Online";
-            const isOnline = status.toLowerCase() !== "offline";
+            const city = row.City?.trim().toLowerCase();
+
+            const matching = collectorData.filter(c =>
+              c["City"]?.trim().toLowerCase() === city &&
+              c["Collector Issue"] !== undefined
+            );
+            const hasIssue = matching.some(m => m["Collector Issue"]?.trim().toLowerCase() === "yes");
 
             if (!isNaN(lat) && !isNaN(lon)) {
-              addMarker(lat, lon, `<a href='${link}'>${name}</a><br>Status: ${status}`, isOnline);
+              const status = hasIssue ? "Offline" : "Online";
+              addMarker(lat, lon, `<a href='${link}'>${name}</a><br>Status: ${status}`, !hasIssue);
               hasValid = true;
             }
           });
+
           if (hasValid) {
             map.fitBounds(bounds, { padding: 100 });
           }
         }
       });
-    });
-  </script>
+    }
+  });
+});</script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vSV38dO4UHsnXyLVAho45wIjgyoQXI3geoEmhKeyU_OFLbRu3PQi1s9SOtKRvQPSMFTxrjL0obEQqBZ/pub?gid=0&single=true&output=csv&t=" + new Date().getTime(), {
