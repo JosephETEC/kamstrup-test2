@@ -24,10 +24,11 @@
 </head>
 <body>
 <header style="background-color: #2c5782; color: white; padding: 12px 20px; text-align: center; position: sticky; top: 0; z-index: 1000;">
-<nav style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; font-size: 1.1em; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+<header style="background-color: #2c5782; color: white; padding: 12px 20px; text-align: center; position: sticky; top: 0; z-index: 1000;">
+<nav id="dynamic-nav" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; font-size: 1.1em; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
 <a href="index.html" style="color: white; text-decoration: none; font-weight: 500;">Kamstrup Health Report</a>
-
-<a href="bayou-liberty.html" style="color: white; text-decoration: none; font-weight: 500;">Bayou Liberty</a><a href="hessmer.html" style="color: white; text-decoration: none; font-weight: 500;">Hessmer</a><a href="homer.html" style="color: white; text-decoration: none; font-weight: 500;">Homer</a><a href="lake-charles.html" style="color: white; text-decoration: none; font-weight: 500;">Lake Charles</a><a href="shreveport.html" style="color: white; text-decoration: none; font-weight: 500;">Shreveport</a><a href="westwego.html" style="color: white; text-decoration: none; font-weight: 500;">Westwego</a></nav>
+</nav>
+</header>
 </header>
 <div id="map"></div><div style="text-align:center; margin: 20px;"><a href="index.html" style="display:inline-block; padding:10px 20px; background:#2c5782; color:white; text-decoration:none; border-radius:5px;">← Back to Kamstrup Health Report</a></div>
 <script>
@@ -78,5 +79,30 @@
       });
     });
   </script>
-</body>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vSV38dO4UHsnXyLVAho45wIjgyoQXI3geoEmhKeyU_OFLbRu3PQi1s9SOtKRvQPSMFTxrjL0obEQqBZ/pub?gid=0&single=true&output=csv&t=" + new Date().getTime(), {
+    download: true,
+    header: true,
+    complete: function(results) {
+      const nav = document.getElementById('dynamic-nav');
+      const cities = results.data;
+      const added = new Set();
+
+      cities.forEach(row => {
+        const city = row.City?.trim();
+        const link = row["Page Link"]?.trim();
+        if (city && link && !added.has(city.toLowerCase())) {
+          const a = document.createElement('a');
+          a.href = link;
+          a.textContent = city;
+          a.style = "color: white; text-decoration: none; font-weight: 500;";
+          nav.appendChild(a);
+          added.add(city.toLowerCase());
+        }
+      });
+    }
+  });
+});
+</script></body>
 </html>
