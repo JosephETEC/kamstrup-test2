@@ -13,7 +13,7 @@
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: #f4f4f4;
       margin: 0;
-      padding: 40px;
+      padding: 0;
       color: #2c5782;
       text-align: center;
     }
@@ -22,7 +22,11 @@
       padding: 12px 20px;
       color: white;
       text-align: center;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      position: sticky;
+      top: 0;
+      width: 100%;
+      z-index: 1000;
     }
     nav {
       display: flex;
@@ -94,11 +98,57 @@
       h1 { font-size: 1.4em; }
       #map { height: 300px; width: 100% !important; }
     }
-  </style>
+  
+        .nav-wrapper {
+            position: relative;
+        }
+        
+            .nav-wrapper.active nav {
+                display: flex;
+            }
+            
+            .nav-wrapper.active nav {
+                display: flex;
+            }
+            .hamburger {
+                display: flex;
+            }
+        }
+        
+        .nav-wrapper {
+            position: relative;
+        }
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            cursor: pointer;
+            padding: 10px;
+        }
+        .hamburger div {
+            width: 25px;
+            height: 3px;
+            background-color: white;
+            margin: 4px 0;
+        }
+        @media (max-width: 768px) {
+            nav {
+                display: none;
+                flex-direction: column;
+                background-color: #2c5782;
+                padding: 10px 0;
+            }
+            .nav-wrapper.active nav {
+                display: flex;
+            }
+            .hamburger {
+                display: flex;
+            }
+        }
+        </style>
 </head>
 <body>
 <header>
-<nav>
+<div class="nav-wrapper"><div class="hamburger" onclick="toggleMenu()"><div></div><div></div><div></div></div><nav>
 <a href="index.html">Home</a>
 <a href="louisiana.html">Louisiana</a>
 <a href="bayou-liberty.html">Bayou Liberty</a>
@@ -107,7 +157,7 @@
 <a href="lake-charles.html">Lake Charles</a>
 <a href="shreveport.html">Shreveport</a>
 <a href="westwego.html">Westwego</a>
-</nav>
+</nav></div>
 </header>
 <h1>Louisiana Collector Tower Information</h1>
 <div class="info">
@@ -121,7 +171,7 @@
 </div>
 <div style="text-align:center; margin-top: 20px;">
 <a href="index.html" style="display: inline-block; background-color: #2c5782; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; font-weight: 500;">
-    ← Back to Dashboard
+    â† Back to Dashboard
   </a>
 </div>
 <script>
@@ -205,5 +255,10 @@ const map = new mapboxgl.Map({
     document.getElementById('streetsBtn').classList.remove('active');
   };
 </script>
-</body>
+<script>
+    function toggleMenu() {
+        const wrapper = document.querySelector('.nav-wrapper');
+        wrapper.classList.toggle('active');
+    }
+    </script></body>
 </html>
