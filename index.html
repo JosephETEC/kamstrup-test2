@@ -420,12 +420,12 @@ function closeCityModal() {
 
     for (let i = 1; i < lines.length; i++) {
       if (!lines[i]) continue;
-      const parts = lines[i].split(',').map(p => p?.trim() || '');
-      if (!parts[cityIndex] || !parts[dateIndex] || !parts[valueIndex]) continue;
+      const parts = lines[i]?.split(',') || [];
+      const city = (parts[cityIndex] || '').trim();
+      const date = (parts[dateIndex] || '').trim();
+      const value = (parts[valueIndex] || '').trim();
 
-      const city = parts[cityIndex];
-      const date = parts[dateIndex];
-      const value = parts[valueIndex];
+      if (!city || !date || !value) continue;
 
       const key = city.toLowerCase().trim();
       if (!data[key]) data[key] = [];
@@ -444,9 +444,12 @@ function closeCityModal() {
     return historyArray.map(entry => `${entry.date}: ${entry.value}%`).join('<br>');
   }
 
-  const originalShowCityInfo = showCityInfo;
+  if (!window.originalShowCityInfo) {
+    window.originalShowCityInfo = showCityInfo;
+  }
+
   showCityInfo = function (cityName) {
-    originalShowCityInfo(cityName);
+    window.originalShowCityInfo(cityName);
     const key = cityName.toLowerCase().trim();
     const history = window.cityHistoryData[key];
     console.log("🔍 Looking up city:", key, "→ Found:", !!history, history);
