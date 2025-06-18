@@ -260,7 +260,8 @@ async function fetchChartData() {
     };
   });
 
-  window.cityLookup = {};
+  
+window.cityLookup = {};
 
   chartData.forEach(city => {
     const div = document.createElement('div');
@@ -302,7 +303,7 @@ if (citiesWithIssues.has(city.city)) {
     });
   });
 }
-function showCityInfo(cityName) {
+window.showCityInfo = async function(cityName) {
   const city = window.cityLookup[cityName.toLowerCase()];
   if (!city) return;
 
