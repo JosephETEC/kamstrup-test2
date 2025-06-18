@@ -1,87 +1,133 @@
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Debug City Modal</title>
+  <meta charset="UTF-8">
+  <title>Kamstrup Health Report</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+      text-align: center;
+    }
+    .tile {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin: 10px;
+      width: 200px;
+      display: inline-block;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      cursor: pointer;
+    }
+    #cityModal {
+      display:none;
+      position:fixed;
+      top:50%;
+      left:50%;
+      transform:translate(-50%,-50%);
+      background:white;
+      padding:20px;
+      border-radius:12px;
+      box-shadow:0 4px 20px rgba(0,0,0,0.3);
+      z-index:1000;
+      width:300px;
+    }
+    #modalBackdrop {
+      display:none;
+      position:fixed;
+      top:0;
+      left:0;
+      width:100%;
+      height:100%;
+      background:rgba(0,0,0,0.5);
+      z-index:999;
+    }
+    .close-btn {
+      margin-top:12px;
+      padding:10px 20px;
+      font-weight:bold;
+      border-radius:8px;
+      border:2px solid #2c5782;
+      background:#e0f3ff;
+      cursor:pointer;
+    }
+  </style>
 </head>
 <body>
-  <div id="cityModal" style="display:block; border: 1px solid #ccc; padding: 20px; width: 300px; margin: 20px auto; background:#fff;">
+  <h1>Kamstrup Health Report</h1>
+  <div class="tile" onclick="showCityInfo('Bayou Liberty')">Bayou Liberty</div>
+  <div class="tile" onclick="showCityInfo('Shreveport')">Shreveport</div>
+  <div class="tile" onclick="showCityInfo('Columbus')">Columbus</div>
+
+  <div id="cityModal">
     <h2 id="modalCityName"></h2>
     <p><strong>Reading Performance:</strong> <span id="modalPerformance"></span>%</p>
     <p><strong>Total Meters:</strong> <span id="modalTotal"></span></p>
     <p><strong>Missing Reads:</strong> <span id="modalMissing"></span></p>
     <div id="historyFallback" style="margin-top:10px; font-size: 0.9em; color: #2c5782;"></div>
-    <button onclick="closeCityModal()" style="margin-top: 12px; padding: 10px 20px;">Close</button>
+    <button class="close-btn" onclick="closeCityModal()">Close</button>
   </div>
-  <div id="modalBackdrop" style="display:none;"></div>
+  <div id="modalBackdrop" onclick="closeCityModal()"></div>
+
   <script>
     async function showCityInfo(cityName) {
-  const city = window.cityLookup[cityName.toLowerCase()];
-  if (!city) return;
+      const city = window.cityLookup[cityName.toLowerCase()];
+      if (!city) return;
 
-  console.log("Opening modal for city:", cityName);
-  document.getElementById("modalCityName").textContent = city.city;
-  document.getElementById("modalPerformance").textContent = city.value.toFixed(2);
-  document.getElementById("modalTotal").textContent = city.total;
-  document.getElementById("modalMissing").textContent = city.missing;
+      document.getElementById("modalCityName").textContent = city.city;
+      document.getElementById("modalPerformance").textContent = city.value.toFixed(2);
+      document.getElementById("modalTotal").textContent = city.total;
+      document.getElementById("modalMissing").textContent = city.missing;
 
-  document.getElementById("cityModal").style.display = "block";
-  document.getElementById("modalBackdrop").style.display = "block";
+      document.getElementById("cityModal").style.display = "block";
+      document.getElementById("modalBackdrop").style.display = "block";
 
-  const fallbackContainer = document.getElementById("historyFallback");
-  fallbackContainer.innerHTML = "";
+      const fallbackContainer = document.getElementById("historyFallback");
+      fallbackContainer.innerHTML = "";
 
-  try {
-    const response = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=468224320&single=true&output=csv");
-    const text = await response.text();
-    const rows = text.trim().split("\n").map(r => r.split(","));
-    console.log("Fetched rows:", rows.length);
+      try {
+        const response = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=468224320&single=true&output=csv");
+        const text = await response.text();
+        const rows = text.trim().split("\n").map(r => r.split(","));
 
-    const allCities = [...new Set(rows.slice(1).map(r => r[1].trim()))];
-    console.log("Available cities in CSV:", allCities);
+        const allCities = [...new Set(rows.slice(1).map(r => r[1].trim()))];
+        const cityHistory = rows.slice(1).filter(r => r[1].trim().toLowerCase() === cityName.toLowerCase());
+        const recent = cityHistory.slice(-4);
 
-    const cityHistory = rows
-      .slice(1)
-      .filter(r => r[1].trim().toLowerCase() === cityName.toLowerCase());
-
-    const recent = cityHistory.slice(-4); // Last 4 entries
-
-    if (recent.length === 0) {
-      const debugInfo = document.createElement("div");
-      debugInfo.style = "margin-top: 10px; font-size: 0.85em;";
-      debugInfo.innerHTML = `
-        <p><strong>No historical performance data found for "${cityName}".</strong></p>
-        <p><strong>Available cities in sheet:</strong><br/>${allCities.join(", ")}</p>`;
-      fallbackContainer.appendChild(debugInfo);
-    } else {
-      const list = document.createElement("ul");
-      list.style = "list-style:none; padding-left:0; margin-top:10px; font-size: 0.9em;";
-      recent.forEach(r => {
-        const item = document.createElement("li");
-        item.textContent = `${r[0]}: ${r[2]}%`;
-        list.appendChild(item);
-      });
-      fallbackContainer.appendChild(list);
+        if (recent.length === 0) {
+          const debugInfo = document.createElement("div");
+          debugInfo.innerHTML = `<p><strong>No historical performance data found for "${cityName}".</strong></p>
+            <p><strong>Available cities in sheet:</strong><br/>${allCities.join(", ")}</p>`;
+          fallbackContainer.appendChild(debugInfo);
+        } else {
+          const list = document.createElement("ul");
+          list.style = "list-style:none; padding-left:0; margin-top:10px; font-size: 0.9em;";
+          recent.forEach(r => {
+            const item = document.createElement("li");
+            item.textContent = `${r[0]}: ${r[2]}%`;
+            list.appendChild(item);
+          });
+          fallbackContainer.appendChild(list);
+        }
+      } catch (err) {
+        console.error("Error loading historical data:", err);
+        fallbackContainer.textContent = "Error loading historical data.";
+      }
     }
-  } catch (err) {
-    console.error("Error loading historical data:", err);
-    fallbackContainer.textContent = "Error loading historical data.";
-  }
-}
+
     function closeCityModal() {
       document.getElementById("cityModal").style.display = "none";
       document.getElementById("modalBackdrop").style.display = "none";
     }
-    // Simulate a click
+
+    // Dummy city data for lookup
     window.cityLookup = {
-      "bayou liberty": {
-        city: "Bayou Liberty",
-        value: 78.17,
-        total: 3773,
-        missing: 1050
-      }
+      "bayou liberty": { city: "Bayou Liberty", value: 78.17, total: 3773, missing: 1050 },
+      "shreveport": { city: "Shreveport", value: 88.93, total: 22381, missing: 3179 },
+      "columbus": { city: "Columbus", value: 100.0, total: 52, missing: 0 }
     };
-    showCityInfo("Bayou Liberty");
   </script>
 </body>
 </html>
