@@ -1,311 +1,25 @@
+
 <!DOCTYPE html>
-
-<html lang="en">
+<html>
 <head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Kamstrup Health Report</title>
-<link href="manifest.json" rel="manifest"/>
-<meta content="#2c5782" name="theme-color"/>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    window.addEventListener('DOMContentLoaded', () => {
-      const today = new Date();
-      const start = new Date();
-      start.setDate(today.getDate() - 3);
-      const end = new Date();
-      end.setDate(today.getDate() - 1);
-
-      document.getElementById('report-date').textContent = today.toLocaleDateString('en-US', {
-        year: 'numeric', month: 'long', day: 'numeric'
-      });
-      document.getElementById('start-date').textContent = start.toLocaleDateString('en-US', {
-        year: 'numeric', month: 'long', day: 'numeric'
-      });
-      document.getElementById('end-date').textContent = end.toLocaleDateString('en-US', {
-        year: 'numeric', month: 'long', day: 'numeric'
-      });
-    });
-  </script>
-<style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #f4f4f4;
-      margin: 0;
-      padding: 0;
-      color: #2c5782;
-      text-align: center;
-    }
-    header {
-      background-color: #2c5782;
-      padding: 12px 20px;
-      color: white;
-      text-align: center;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-    nav {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 20px;
-      font-size: 1.1em;
-    }
-    nav a {
-      color: white;
-      text-decoration: none;
-      font-weight: 500;
-      transition: color 0.2s ease;
-    }
-    nav a:hover {
-      text-decoration: underline;
-    }
-    h1 {
-      font-size: 2.2em;
-      margin: 20px 0 5px;
-    }
-    .report-dates {
-      font-size: 1.15em;
-      margin-bottom: 30px;
-    }
-    .region-header {
-      background-color: #dce9f6;
-      padding: 10px;
-      font-size: 2em;
-      font-weight: bold;
-      border-top: 2px solid #2c5782;
-      margin-top: 40px;
-    }
-    .performance-container {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 24px;
-      padding: 20px;
-    }
-    .city-card {
-      width: 200px;
-      height: 200px;
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      font-size: 1em;
-      text-align: center;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-    .city-card:hover {
-      transform: scale(1.05);
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-    }
-    canvas.donut {
-      max-width: 80px;
-      max-height: 80px;
-      margin-top: 8px;
-      display: block;
-      margin-left: auto;
-      margin-right: auto;
-    }
-    .collector-box {
-      margin: 20px auto;
-      max-width: 900px;
-      background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      padding: 20px;
-      text-align: left;
-    }
-    .footer-bar {
-      text-align: center;
-      padding: 20px;
-    }
-    .footer-bar button {
-      padding: 10px 20px;
-      font-weight: bold;
-      border: 2px solid #2c5782;
-      background: #e0f3ff;
-      cursor: pointer;
-      margin-bottom: 10px;
-    }
-    .footer-bar a {
-      display: inline-block;
-      margin-bottom: 10px;
-      text-decoration: none;
-      color: #2c5782;
-      font-size: 0.9em;
-    }
-    .blinking-alert {
-      font-size: 1.5em;
-      margin-top: 4px;
-      animation: blink 1s step-start 0s infinite;
-    }
-
-    @keyframes blink {
-      50% { opacity: 0; }
-    }
-  </style>
-<style>
-  @media print {
-    @page {
-      size: landscape;
-      margin: 0.3in;
-    }
-    body {
-      zoom: 60%;
-      margin: 0;
-    }
-    header, .footer-bar, button, nav {
-      display: none !important;
-    }
-    .performance-container {
-      page-break-inside: avoid;
-    }
-    .collector-box, .region-header, .performance-container {
-      break-inside: avoid;
-    }
-    #cityModal, #modalBackdrop {
-      display: none !important;
-    }
-    .blinking-alert {
-      animation: none !important;
-      opacity: 1 !important;
-    }
-  }
-</style>
+  <title>Debug City Modal</title>
 </head>
 <body>
-<header>
-<nav>
-<a href="index.html">Home</a>
-<a href="louisiana.html">Louisiana</a>
-<a href="mississippi.html">Mississippi</a>
-</nav>
-</header>
-<h1>Kamstrup Health Report</h1>
-<div class="report-dates" id="report-dates-box">
-    Report Date: <span id="report-date"></span><br/>
-    Start Date: <span id="start-date">April 19, 2025</span><br/>
-    End Date: <span id="end-date">April 21, 2025</span>
-</div>
-<div class="region-header">Louisiana</div>
-<div class="performance-container" id="louisiana-container"></div>
-<div class="collector-box" style="text-align:center">
-<h2>Collector Issues</h2>
-<div id="collector-issues-content-la">Loading...</div>
-</div>
-<div class="region-header">Mississippi</div>
-<div class="performance-container" id="mississippi-container"></div>
-<div class="collector-box" style="text-align:center">
-<h2>Collector Issues</h2>
-<div id="collector-issues-content-ms">Loading...</div>
-</div>
-<div class="footer-bar">
-<button onclick="fetchChartData()">Refresh Dashboard Data</button><br/>
-<a href="https://docs.google.com/spreadsheets/d/1bxCYfdCDue8PBX5g24BLGwcxaA2clrr1PsOFjDojGRo/edit?gid=0#gid=0" target="_blank">Edit Performance Data in Google Sheets</a>
-</div>
-<script>
-    const citiesWithIssues = new Set();
-
-    async function fetchCollectorIssues() {
-      const response = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=96572475&single=true&output=csv");
-      const text = await response.text();
-      const rows = text.trim().split('\n').map(r => r.split(','));
-      const headers = rows[0];
-      const data = rows.slice(1).map(row => {
-        const obj = {};
-        headers.forEach((h, i) => obj[h.trim()] = row[i] ? row[i].trim() : '');
-        if (obj["Collector Issue"] === "Yes") citiesWithIssues.add(obj.City);
-        return obj;
-      });
-      const laCities = ['Bayou Liberty', 'Hessmer', 'Homer', 'Lake Charles', 'Shreveport', 'Westwego'];
-      const msCities = ['Columbus', 'Diamondhead', 'Jackson', 'Moss Point', 'Okolona'];
-      const formatEntry = (e) => `<p><strong>${e.City}:</strong> ${e["Collector Name"]}, S/N: ${e["Serial Number"]}, Last Contact: ${e["Last Contact"]}, Comments: ${e.Comments}</p>`;
-      const laIssues = data.filter(e => e["Collector Issue"] === "Yes" && laCities.includes(e.City));
-
-      const msResponse = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=11820546&single=true&output=csv");
-      const msText = await msResponse.text();
-      const msRows = msText.trim().split('\n').map(r => r.split(','));
-      const msHeaders = msRows[0];
-      const msIssues = msRows.slice(1).map(row => {
-        const obj = {};
-        msHeaders.forEach((h, i) => obj[h.trim()] = row[i] ? row[i].trim() : '');
-        if (obj["Collector Issue"] === "Yes") citiesWithIssues.add(obj.City);
-        return obj;
-      }).filter(e => e["Collector Issue"] === "Yes" && msCities.includes(e.City));
-
-      document.getElementById('collector-issues-content-la').innerHTML = laIssues.length ? laIssues.map(formatEntry).join('') : "<p>No collector issues reported.</p>";
-      document.getElementById('collector-issues-content-ms').innerHTML = msIssues.length ? msIssues.map(formatEntry).join('') : "<p>No collector issues reported.</p>";
-    }
-
-    
-async function fetchChartData() {
-  // Clear out existing tiles
-  document.getElementById('louisiana-container').innerHTML = '';
-  document.getElementById('mississippi-container').innerHTML = '';
-
-  const response = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=0&single=true&output=csv");
-  const text = await response.text();
-  const allRows = text.trim().split('\n');
-  const rows = allRows.slice(1);
-  const chartData = rows.map(row => {
-    const [city, value, total, missing] = row.split(',');
-    return {
-      id: city.trim().toLowerCase().replace(/\s+/g, '') + 'Chart',
-      city: city.trim(),
-      value: parseFloat(value.trim()),
-      total: parseInt(total.trim()),
-      missing: parseInt(missing.trim())
-    };
-  });
-
-  window.cityLookup = {};
-
-  chartData.forEach(city => {
-    const div = document.createElement('div');
-div.className = 'city-card';
-if (citiesWithIssues.has(city.city)) {
-  div.style.backgroundColor = '#ffdddd';
-}
-    div.onclick = () => showCityInfo(city.city);
-    div.innerHTML = `<div><strong style=\"font-size: 1.4em;\">${city.city}</strong><br><span style=\"font-weight:bold; display:block; margin-top: 4px;\">${city.value.toFixed(2)}%</span><canvas id=\"${city.id}\" class=\"donut\"></canvas>${citiesWithIssues.has(city.city) ? '<div class=\"blinking-alert\">⚠️</div>' : ''}</div>`;
-
-    window.cityLookup[city.city.toLowerCase()] = city;
-
-    const chartSection = ['Bayou Liberty', 'Hessmer', 'Homer', 'Lake Charles', 'Shreveport', 'Westwego'].includes(city.city)
-      ? document.getElementById('louisiana-container')
-      : document.getElementById('mississippi-container');
-
-    chartSection?.appendChild(div);
-
-    const canvas = document.getElementById(city.id);
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    new Chart(ctx, {
-      type: 'doughnut',
-      data: {
-        datasets: [{
-          data: [city.value, 100 - city.value],
-          backgroundColor: ['#2c5782', '#ffa500'],
-          borderWidth: 0
-        }]
-      },
-      options: {
-        cutout: '50%',
-        responsive: true,
-        plugins: {
-          legend: { display: false },
-          tooltip: { enabled: false }
-        }
-      }
-    });
-  });
-}
-function showCityInfo(cityName) {
+  <div id="cityModal" style="display:block; border: 1px solid #ccc; padding: 20px; width: 300px; margin: 20px auto; background:#fff;">
+    <h2 id="modalCityName"></h2>
+    <p><strong>Reading Performance:</strong> <span id="modalPerformance"></span>%</p>
+    <p><strong>Total Meters:</strong> <span id="modalTotal"></span></p>
+    <p><strong>Missing Reads:</strong> <span id="modalMissing"></span></p>
+    <div id="historyFallback" style="margin-top:10px; font-size: 0.9em; color: #2c5782;"></div>
+    <button onclick="closeCityModal()" style="margin-top: 12px; padding: 10px 20px;">Close</button>
+  </div>
+  <div id="modalBackdrop" style="display:none;"></div>
+  <script>
+    async function showCityInfo(cityName) {
   const city = window.cityLookup[cityName.toLowerCase()];
   if (!city) return;
 
+  console.log("Opening modal for city:", cityName);
   document.getElementById("modalCityName").textContent = city.city;
   document.getElementById("modalPerformance").textContent = city.value.toFixed(2);
   document.getElementById("modalTotal").textContent = city.total;
@@ -313,44 +27,61 @@ function showCityInfo(cityName) {
 
   document.getElementById("cityModal").style.display = "block";
   document.getElementById("modalBackdrop").style.display = "block";
-}
 
-function closeCityModal() {
-  document.getElementById("cityModal").style.display = "none";
-  document.getElementById("modalBackdrop").style.display = "none";
-}
+  const fallbackContainer = document.getElementById("historyFallback");
+  fallbackContainer.innerHTML = "";
 
-    fetchCollectorIssues().then(fetchChartData);
-  </script>
-<div id="cityModal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%);
-  background:white; padding:20px; border-radius:16px; box-shadow:0 4px 20px rgba(0,0,0,0.3); z-index:1000; width:320px; 
-  text-align:center; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color:#2c5782;">
-<h2 id="modalCityName" style="margin-top:0; font-size:1.6em; font-weight:bold;"></h2>
-<p style="margin:8px 0;"><strong>Reading Performance:</strong><br/><span id="modalPerformance" style="font-size:1.3em;"></span>%</p>
-<p style="margin:8px 0;"><strong>Total Meters:</strong><br/><span id="modalTotal"></span></p>
-<p style="margin:8px 0;"><strong>Missing Reads:</strong><br/><span id="modalMissing"></span></p>
-<div id="historyFallback" style="margin-top:10px; font-size: 0.9em; color: #2c5782;"></div>
-<button onclick="closeCityModal()" style="margin-top:12px; padding:10px 20px; font-weight:bold; border-radius:8px;
-    border: 2px solid #2c5782; background: #e0f3ff; cursor:pointer;">Close</button>
-</div>
-<div id="modalBackdrop" onclick="closeCityModal()" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh;
-  background:rgba(0,0,0,0.5); z-index:999;"></div>
-<div style="text-align:center; margin-bottom: 20px;">
-<button onclick="window.print()" style="padding: 10px 20px; font-weight: bold; border: 2px solid #2c5782; background: #e0f3ff; cursor: pointer;">
-    Print / Export to PDF
-  </button>
-</div>
-<script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function () {
-      navigator.serviceWorker.register('service-worker.js').then(function (registration) {
-        console.log('ServiceWorker registration successful with scope:', registration.scope);
-      }, function (err) {
-        console.log('ServiceWorker registration failed:', err);
+  try {
+    const response = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=468224320&single=true&output=csv");
+    const text = await response.text();
+    const rows = text.trim().split("\n").map(r => r.split(","));
+    console.log("Fetched rows:", rows.length);
+
+    const allCities = [...new Set(rows.slice(1).map(r => r[1].trim()))];
+    console.log("Available cities in CSV:", allCities);
+
+    const cityHistory = rows
+      .slice(1)
+      .filter(r => r[1].trim().toLowerCase() === cityName.toLowerCase());
+
+    const recent = cityHistory.slice(-4); // Last 4 entries
+
+    if (recent.length === 0) {
+      const debugInfo = document.createElement("div");
+      debugInfo.style = "margin-top: 10px; font-size: 0.85em;";
+      debugInfo.innerHTML = `
+        <p><strong>No historical performance data found for "${cityName}".</strong></p>
+        <p><strong>Available cities in sheet:</strong><br/>${allCities.join(", ")}</p>`;
+      fallbackContainer.appendChild(debugInfo);
+    } else {
+      const list = document.createElement("ul");
+      list.style = "list-style:none; padding-left:0; margin-top:10px; font-size: 0.9em;";
+      recent.forEach(r => {
+        const item = document.createElement("li");
+        item.textContent = `${r[0]}: ${r[2]}%`;
+        list.appendChild(item);
       });
-    });
+      fallbackContainer.appendChild(list);
+    }
+  } catch (err) {
+    console.error("Error loading historical data:", err);
+    fallbackContainer.textContent = "Error loading historical data.";
   }
-</script>
-  <script src="main.js"></script>
+}
+    function closeCityModal() {
+      document.getElementById("cityModal").style.display = "none";
+      document.getElementById("modalBackdrop").style.display = "none";
+    }
+    // Simulate a click
+    window.cityLookup = {
+      "bayou liberty": {
+        city: "Bayou Liberty",
+        value: 78.17,
+        total: 3773,
+        missing: 1050
+      }
+    };
+    showCityInfo("Bayou Liberty");
+  </script>
 </body>
 </html>
