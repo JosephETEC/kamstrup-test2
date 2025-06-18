@@ -302,7 +302,7 @@ if (citiesWithIssues.has(city.city)) {
     });
   });
 }
-async function showCityInfo(cityName) {
+function showCityInfo(cityName) {
   const city = window.cityLookup[cityName.toLowerCase()];
   if (!city) return;
 
@@ -313,38 +313,6 @@ async function showCityInfo(cityName) {
 
   document.getElementById("cityModal").style.display = "block";
   document.getElementById("modalBackdrop").style.display = "block";
-    
-const fallbackContainer = document.getElementById("historyFallback");
-  if (!fallbackContainer) return;
-
-  fallbackContainer.innerHTML = "<em>Loading recent performance...</em>";
-
-  try {
-    const response = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=468224320&single=true&output=csv");
-    const text = await response.text();
-    const rows = text.trim().split("\n").map(r => r.split(","));
-
-    const cityHistory = rows.slice(1).filter(r => r[1] && r[1].trim().toLowerCase() === cityName.toLowerCase());
-    const recent = cityHistory.slice(-4);
-
-    if (recent.length === 0) {
-      fallbackContainer.innerHTML = `<p><strong>No historical data for ${cityName}.</strong></p>`;
-    } else {
-      const list = document.createElement("ul");
-      list.style = "list-style:none; padding-left:0; margin-top:10px;";
-      recent.forEach(r => {
-        const item = document.createElement("li");
-        item.textContent = `${r[0]}: ${r[2].replace(/\\r$/, "")}%`;
-        list.appendChild(item);
-      });
-      fallbackContainer.innerHTML = "<p><strong>Recent Performance:</strong></p>";
-      fallbackContainer.appendChild(list);
-    }
-  } catch (err) {
-    console.error("Error loading historical data:", err);
-    fallbackContainer.textContent = "Error loading historical data.";
-  }
-}
 }
 
 function closeCityModal() {
