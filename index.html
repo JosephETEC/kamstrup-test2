@@ -402,5 +402,56 @@ function closeCityModal() {
   });
 </script>
 
+
+<script>
+  const cityHistoryData = {};
+
+  async function fetchHistoricalPerformance() {
+    const response = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=468224320&single=true&output=csv");
+    const text = await response.text();
+    const lines = text.trim().split('\n');
+    const headers = lines[0].split(',');
+
+    const cityIndex = headers.indexOf("City");
+    const dateIndex = headers.indexOf("Date");
+    const valueIndex = headers.indexOf("Performance");
+
+    const data = {};
+
+    for (let i = 1; i < lines.length; i++) {
+      const parts = lines[i].split(',');
+      const city = parts[cityIndex].trim();
+      const date = parts[dateIndex].trim();
+      const value = parts[valueIndex].trim();
+
+      if (!data[city]) data[city] = [];
+      data[city].push({ date, value });
+    }
+
+    for (const city in data) {
+      data[city].sort((a, b) => new Date(b.date) - new Date(a.date));
+      cityHistoryData[city.toLowerCase().trim()] = data[city].slice(-4).reverse();
+    }
+  }
+
+  function formatHistoryList(historyArray) {
+    return historyArray.map(entry => `${entry.date}: ${entry.value}%`).join('<br>');
+  }
+
+  const originalShowCityInfo = showCityInfo;
+  showCityInfo = function (cityName) {
+    originalShowCityInfo(cityName);
+    const key = cityName.toLowerCase().trim();
+    console.log("Modal City Lookup:", key);
+    console.log("Available History Cities:", Object.keys(cityHistoryData));
+    const history = cityHistoryData[key];
+    document.getElementById("modalHistory").innerHTML = history ? formatHistoryList(history) : "No data available";
+  };
+
+  fetchHistoricalPerformance().then(() => {
+    fetchCollectorIssues().then(fetchChartData);
+  });
+</script>
+
 </body>
 </html>
