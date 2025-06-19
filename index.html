@@ -250,10 +250,11 @@ async function fetchChartData() {
   const allRows = text.trim().split('\n');
   const rows = allRows.slice(1);
   const chartData = rows.map(row => {
-    const [city, value, total, missing] = row.split(',');
+  const [city, value, total, missing] = row.split(',');
+  const cleanCity = city.trim();
     return {
-      id: city.trim().toLowerCase().replace(/\s+/g, '') + 'Chart',
-      city: city.trim(),
+      id: cleanCity.toLowerCase().replace(/\s+/g, '') + 'Chart',
+      city: cleanCity,
       value: parseFloat(value.trim()),
       total: parseInt(total.trim()),
       missing: parseInt(missing.trim())
