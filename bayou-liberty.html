@@ -44,8 +44,6 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Bayou Liberty, LA - Dashboard</title>
-
-
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
@@ -181,7 +179,6 @@ body {
   padding: 0;
 }
 </style>
-
 <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet"/>
 <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
 </head>
@@ -265,10 +262,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
         new mapboxgl.Marker({ color })
           .setLngLat([loc.lon, loc.lat])
-          .setPopup(new mapboxgl.Popup().setText(`${loc.name}
-Status: ${online ? "Online" : "Offline"}`))
+          .setPopup(new mapboxgl.Popup().setText(`${loc.name}\nStatus: ${online ? "Online" : "Offline"}`))
           .addTo(map);
       });
+    },
+    error: function(err) {
+      console.error("Map data load failed:", err);
     }
   });
 });
