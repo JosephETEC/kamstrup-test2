@@ -44,8 +44,6 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Bayou Liberty, LA - Dashboard</title>
-
-
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
@@ -247,26 +245,33 @@ document.addEventListener("DOMContentLoaded", function () {
     download: true,
     header: true,
     complete: function(results) {
-      const data = results.data.filter(row => row["City"]?.trim().toLowerCase() === "bayou liberty");
-      const locations = [
-        { lat: 30.270882, lon: -89.823255, name: "Water Tower" },
-        { lat: 30.301542, lon: -89.812925, name: "Well #3" }
-      ];
-      locations.forEach(loc => {
-        const collector = data.find(row => row["Collector Name"]?.trim().toLowerCase() === loc.name.toLowerCase());
-        const issue = collector ? collector["Collector Issue"]?.trim().toLowerCase() : null;
-        const online = issue !== "yes";
-        const color = online ? green : red;
-
-        new mapboxgl.Marker({ color })
-          .setLngLat([loc.lon, loc.lat])
-          .setPopup(new mapboxgl.Popup().setText(`${loc.name}\nStatus: ${online ? "Online" : "Offline"}`))
-          .addTo(map);
-      });
+      const data = results.data.filter(row =>
+        row["City"]?.trim().toLowerCase() === "bayou liberty" &&
+        row["Latitude"] &&
+        row["Longitude"]
+      );
 
       const bounds = new mapboxgl.LngLatBounds();
-      locations.forEach(loc => bounds.extend([loc.lon, loc.lat]));
-      map.fitBounds(bounds, { padding: 30, maxZoom: 14 });
+
+      data.forEach(row => {
+        const name = row["Collector Name"] || "Unknown";
+        const lat = parseFloat(row["Latitude"]);
+        const lon = parseFloat(row["Longitude"]);
+        const status = row["Collector Issue"]?.trim().toLowerCase() === "yes" ? "Offline" : "Online";
+        const color = status === "Online" ? green : red;
+
+        if (!isNaN(lat) && !isNaN(lon)) {
+          new mapboxgl.Marker({ color })
+            .setLngLat([lon, lat])
+            .setPopup(new mapboxgl.Popup().setText(`${name}\nStatus: ${status}`))
+            .addTo(map);
+          bounds.extend([lon, lat]);
+        }
+      });
+
+      if (!bounds.isEmpty()) {
+        map.fitBounds(bounds, { padding: 30, maxZoom: 14 });
+      }
     }
   });
 
