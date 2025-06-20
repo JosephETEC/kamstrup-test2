@@ -248,26 +248,49 @@ document.addEventListener("DOMContentLoaded", function () {
     download: true,
     header: true,
     complete: function(results) {
-      const data = results.data;
-      const bayouLibertyCollectors = data.filter(row => row["City"]?.trim().toLowerCase() === "bayou liberty");
+      const data = results.data.filter(row => row["City"]?.trim().toLowerCase() === "bayou liberty");
+      const total = data.length;
+      const missing = data.filter(row => row["Collector Issue"]?.toLowerCase() === "yes").length;
+      const percentGood = total === 0 ? 0 : (((total - missing) / total) * 100).toFixed(1);
+
+      // Update Summary Tiles
+      document.getElementById("total-missing").textContent = `${total} / ${missing}`;
+      document.getElementById("reading-performance").textContent = `${percentGood}%`;
+      document.getElementById("collector-status").textContent = missing > 0 ? "⚠ Issues Found" : "✅ All Online";
+
+      // Update Map Pins
       const locations = [
         { lat: 30.270882, lon: -89.823255, name: "Water Tower" },
         { lat: 30.301542, lon: -89.812925, name: "Well #3" }
       ];
       locations.forEach(loc => {
-        const collector = bayouLibertyCollectors.find(row => row["Collector Name"]?.trim().toLowerCase() === loc.name.toLowerCase());
-        const issue = collector ? collector["Collector Issue"]?.trim() : null;
-        const online = issue === "No" || !collector || issue !== "Yes";
+        const collector = data.find(row => row["Collector Name"]?.trim().toLowerCase() === loc.name.toLowerCase());
+        const issue = collector ? collector["Collector Issue"]?.trim().toLowerCase() : null;
+        const online = issue !== "yes";
         const color = online ? "#10b981" : "#e11d48";
 
         new mapboxgl.Marker({ color })
           .setLngLat([loc.lon, loc.lat])
-          .setPopup(new mapboxgl.Popup().setText(`${loc.name}\nStatus: ${online ? "Online" : "Offline"}`))
+          .setPopup(new mapboxgl.Popup().setText(`${loc.name}
+Status: ${online ? "Online" : "Offline"}`))
           .addTo(map);
+      });
+
+      // Update Table
+      const tbody = document.querySelector("tbody");
+      tbody.innerHTML = "";
+      data.forEach(row => {
+        const tr = document.createElement("tr");
+        ["Collector Name", "Serial Number", "Last Contact", "Comments"].forEach(field => {
+          const td = document.createElement("td");
+          td.textContent = row[field] || "";
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
       });
     },
     error: function(err) {
-      console.error("Map data load failed:", err);
+      console.error("Map or data load failed:", err);
     }
   });
 });
