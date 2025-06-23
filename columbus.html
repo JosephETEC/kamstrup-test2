@@ -184,18 +184,25 @@
 </nav></div>
 </header>
 <h1>Columbus, MS - Dashboard</h1>
-<div style="display: flex; justify-content: center; gap: 20px; margin: 20px 0; flex-wrap: wrap;">
 
-<div style="flex: 1 1 300px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 20px; text-align: center;">
-<h2 style="margin: 0; color: #2c5782;">Reading Performance</h2>
-<p id="reading-performance" style="font-size: 2em; margin: 10px 0;">Loading...</p>
+
+
+<div style="display: flex; justify-content: center; gap: 20px; margin: 20px 0; flex-wrap: wrap;">
+  <div style="flex: 1 1 300px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 20px; text-align: center;">
+    <h2 style="margin: 0; color: #2c5782;">Total Meters / Missing Reads</h2>
+    <p id="total-missing" style="font-size: 1.8em; margin:10px 0;">Loading...</p>
+  </div>
+  <div style="flex: 1 1 300px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 20px; text-align: center;">
+    <h2 style="margin: 0; color: #2c5782;">Reading Performance</h2>
+    <p id="reading-performance" style="font-size: 2em; margin: 10px 0;">Loading...</p>
+  </div>
+  <div style="flex: 1 1 300px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 20px; text-align: center;">
+    <h2 style="margin: 0; color: #2c5782;">Collector Status</h2>
+    <p id="collector-status" style="font-size: 1.8em; margin: 10px 0;">Loading...</p>
+  </div>
 </div>
-<div style="flex: 1 1 300px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 20px; text-align: center;">
-<h2 style="margin: 0; color: #2c5782;">Collector Status</h2>
-<p id="collector-status" style="font-size: 1.8em; margin: 10px 0;">Loading...</p>
-</div>
-</div>
-<div id="map"></div>
+
+<div id="map" style="height: 350px; width: 100%; margin: 20px 0; border-radius: 10px;"></div>
 <div class="info">
 <table>
 <thead>
@@ -206,14 +213,12 @@
 </tbody>
 </table>
 </div>
-<div style="flex: 1 1 300px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 10px 10px 5px; text-align: center;">
-<h2 style="margin: 0; color: #b91c1c; font-size: 1.1em;">HIGH Priority Info Codes</h2>
-<p id="high-priority-codes" style="font-size: 1.6em; margin: 10px 0; color: #b91c1c;"></p>
-<canvas height="120" id="infoCodeChart" style="margin-top: 10px;"></canvas>
-</div>
-<div style="margin-top: 30px;">
+
+
+<div style="margin-top: 30px; text-align: center;">
 <a href="mississippi.html" style="display:inline-block;padding:10px 20px;background:#2c5782;color:white;text-decoration:none;border-radius:5px;">← Back to Mississippi Collectors</a>
 </div>
+
 
 <script>
     function toggleMenu() {
