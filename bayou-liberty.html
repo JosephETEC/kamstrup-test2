@@ -380,26 +380,63 @@ document.addEventListener("DOMContentLoaded", function () {
     download: true,
     header: true,
     complete: function(results) {
-      const ctx = document.getElementById("historicalChart").getContext("2d");
-
       const city = "bayou liberty";
       const rows = results.data.filter(r =>
         (r["City"] || "").trim().toLowerCase() === city &&
         r["Performance (%)"] && r["Date"]
       );
 
-      
-      const city = "bayou liberty";
-      const rows = results.data.filter(r =>
-        (r["City"] || "").trim().toLowerCase() === city &&
-        r["Performance (%)"] && r["Date"]
-      );
+      const sorted = rows.sort((a, b) => new Date(b["Date"]) - new Date(a["Date"])).slice(0, 5);
+      const container = document.getElementById("historical-performance-tiles");
 
-      const sorted = rows.sort((a, b) => new Date(a["Date"]) - new Date(b["Date"])).slice(-7);
+      if (sorted.length > 0) {
+        sorted.forEach(row => {
+          const tile = document.createElement("div");
+          tile.style.flex = "1 1 300px";
+          tile.style.background = "white";
+          tile.style.borderRadius = "12px";
+          tile.style.boxShadow = "0 4px 12px rgba(0,0,0,0.1)";
+          tile.style.padding = "20px";
+          tile.style.textAlign = "center";
 
-      const labels = sorted.map(r => r["Date"]);
-      const dataPoints = sorted.map(r => parseFloat(r["Performance (%)"]));
+          tile.innerHTML = `
+            <h2 style="margin: 0; color: #2c5782;">${row["Date"]}</h2>
+            <p style="font-size: 2em; margin: 10px 0;">${row["Performance (%)"]}%</p>
+          `;
 
+          container.appendChild(tile);
+        });
+      } else {
+        container.innerHTML = "<p>No historical data available.</p>";
+      }
+    }
+  });
+</script>
+
+
+<script>
+Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=468224320&single=true&output=csv", {
+  download: true,
+  header: true,
+  complete: function(results) {
+    const ctx = document.getElementById("historicalChart").getContext("2d");
+    const city = "bayou liberty";
+    const rows = results.data.filter(r => {
+      return (r["City"] || "").trim().toLowerCase() === city &&
+             (r["Performance (%)"] || r["Performance"] || "").trim() !== "" &&
+             (r["Date"] || "").trim() !== "";
+    });
+
+    console.log("Filtered Rows:", rows);
+
+    const sorted = rows.sort((a, b) => new Date(a["Date"]) - new Date(b["Date"])).slice(-7);
+    const labels = sorted.map(r => r["Date"]);
+    const dataPoints = sorted.map(r => parseFloat(r["Performance (%)"] || r["Performance"]));
+
+    console.log("Labels:", labels);
+    console.log("Data:", dataPoints);
+
+    if (labels.length && dataPoints.every(x => !isNaN(x))) {
       new Chart(ctx, {
         type: 'line',
         data: {
@@ -430,9 +467,10 @@ document.addEventListener("DOMContentLoaded", function () {
           }
         }
       });
+    } else {
+      console.error("Chart Error: Invalid or missing data", labels, dataPoints);
     }
-  });
+  }
+});
 </script>
-
 </body>
-</html>
