@@ -249,30 +249,20 @@ document.addEventListener("DOMContentLoaded", function () {
       const bounds = new mapboxgl.LngLatBounds();
 
       data.forEach(row => {
-      const name = (row["Collector Name"] || "Unknown").trim();
-      const city = (row["City"] || "").trim();
-      const statusRaw = (row["Collector Issue"] || "").trim().toLowerCase();
-      const status = statusRaw === "yes" ? "Offline" : "Online";
-      const color = status === "Online" ? green : red;
+        const name = row["Collector Name"] || "Unknown";
+        const lat = parseFloat(row["Latitude"]);
+        const lon = parseFloat(row["Longitude"]);
+        const status = row["Collector Issue"]?.trim().toLowerCase() === "yes" ? "Offline" : "Online";
+        const color = status === "Online" ? green : red;
 
-      const latRaw = (row["Latitude"] || "").trim();
-      const lonRaw = (row["Longitude"] || "").trim();
-      const lat = parseFloat(latRaw);
-      const lon = parseFloat(lonRaw);
-
-      console.log("Row data:", { city, name, latRaw, lonRaw, lat, lon, status });
-
-      if (!isNaN(lat) && !isNaN(lon)) {
-        new mapboxgl.Marker({ color })
-          .setLngLat([lon, lat])
-          .setPopup(new mapboxgl.Popup().setText(`${name}
-Status: ${status}`))
-          .addTo(map);
-        bounds.extend([lon, lat]);
-      } else {
-        console.warn("Missing or invalid coordinates:", { name, latRaw, lonRaw });
-      }
-    });
+        if (!isNaN(lat) && !isNaN(lon)) {
+          new mapboxgl.Marker({ color })
+            .setLngLat([lon, lat])
+            .setPopup(new mapboxgl.Popup().setText(`${name}\nStatus: ${status}`))
+            .addTo(map);
+          bounds.extend([lon, lat]);
+        }
+      });
 
       if (!bounds.isEmpty()) {
         map.fitBounds(bounds, { padding: 100, maxZoom: 14 });
@@ -359,7 +349,7 @@ Status: ${status}`))
     header: true,
     complete: function(results) {
       const row = results.data.find(r =>
-        (r["City"] || "").toLowerCase().includes("columbus")
+        (r["City"] || "").trim().toLowerCase() === "columbus"
       );
 
       if (row) {
@@ -376,81 +366,5 @@ Status: ${status}`))
     }
   });
 </script>
-
-<script>
-mapboxgl.accessToken = 'pk.eyJ1Ijoiam9zZXBoLWhlYmVydCIsImEiOiJjbWF5ZG0wcTYwODJmMmxwdDI1MjNxenVlIn0.DPzjMzumd_bBfVS0Rqs3Xw';
-const map = new mapboxgl.Map({
-  container: 'map',
-  style: 'mapbox://styles/mapbox/streets-v12',
-  center: [-88.431892, 33.49302072],
-  zoom: 1.5
-});
-
-const bounds = new mapboxgl.LngLatBounds();
-const green = '#10b981';
-const red = '#e11d48';
-
-Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=11820546&single=true&output=csv", {
-  download: true,
-  header: true,
-  complete: function(results) {
-    const data = results.data;
-    let onlineCount = 0;
-    let offlineCount = 0;
-
-    data.forEach(row => {
-      const get = (label) => {
-        const key = Object.keys(row).find(k => k.trim().toLowerCase() === label.toLowerCase());
-        return key ? row[key] : "";
-      };
-
-      const city = get("City").toLowerCase().trim();
-      const name = get("Collector Name").trim();
-      const lat = parseFloat(get("Latitude"));
-      const lon = parseFloat(get("Longitude"));
-      const issue = get("Collector Issue").toLowerCase().trim();
-
-      console.log("Checking row:", { city, name, issue, lat, lon });
-
-      if (city.includes("columbus")) {
-        const status = issue === "yes" ? "Offline" : "Online";
-        const color = status === "Online" ? green : red;
-
-        if (issue === "yes") offlineCount++;
-        else if (issue === "no") onlineCount++;
-
-        if (!isNaN(lat) && !isNaN(lon)) {
-          new mapboxgl.Marker({ color })
-            .setLngLat([lon, lat])
-            .setPopup(new mapboxgl.Popup().setText(`${name}\nStatus: ${status}`))
-            .addTo(map);
-          bounds.extend([lon, lat]);
-        } else {
-          console.warn("Skipping invalid pin:", name, lat, lon);
-        }
-      }
-    });
-
-    // Update status tile
-    document.getElementById("collector-status").textContent = `${onlineCount} Online / ${offlineCount} Offline`;
-
-    if (!bounds.isEmpty()) {
-      map.fitBounds(bounds, { padding: 100, maxZoom: 14 });
-      setTimeout(() => {
-        map.flyTo({
-          center: bounds.getCenter(),
-          zoom: 13,
-          speed: 0.5,
-          curve: 1.5,
-          easing: (t) => t
-        });
-      }, 1000);
-    }
-
-    map.on('load', () => map.resize());
-  }
-});
-</script>
 </body>
-
 </html>
