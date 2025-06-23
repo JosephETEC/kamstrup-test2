@@ -180,7 +180,15 @@
             }
         }
         </style>
-<link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet"/><script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script></head>
+<link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet"/><script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+<style>
+.mapboxgl-marker {
+  transform: scale(0.5);
+  transform-origin: center;
+}
+</style>
+
+</head>
 <body>
 <header>
 <div class="nav-wrapper"><div class="hamburger" onclick="toggleMenu()"><div></div><div></div><div></div></div><nav><a href="index.html">Home</a><a href="mississippi.html">Mississippi</a><a href="columbus.html">Columbus</a><a href="diamondhead.html">Diamondhead</a><a href="jackson.html">Jackson</a><a href="moss-point.html">Moss Point</a><a href="okolona.html">Okolona</a></nav></div>
