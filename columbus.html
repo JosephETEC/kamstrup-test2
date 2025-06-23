@@ -249,23 +249,31 @@ document.addEventListener("DOMContentLoaded", function () {
       const bounds = new mapboxgl.LngLatBounds();
 
       data.forEach(row => {
-      const latRaw = row["Latitude"];
-      const lonRaw = row["Longitude"];
-      const lat = parseFloat(latRaw);
-      const lon = parseFloat(lonRaw);
-      const name = row["Collector Name"] || "Unknown";
-      const status = (row["Collector Issue"] || "").toLowerCase() === "yes" ? "Offline" : "Online";
+      const name = (row["Collector Name"] || "Unknown").trim();
+      const city = (row["City"] || "").toLowerCase();
+      const statusRaw = (row["Collector Issue"] || "").trim().toLowerCase();
+      const status = statusRaw === "yes" ? "Offline" : "Online";
       const color = status === "Online" ? green : red;
 
-      if (!isNaN(lat) && !isNaN(lon)) {
-        new mapboxgl.Marker({ color })
-          .setLngLat([lon, lat])
-          .setPopup(new mapboxgl.Popup().setText(`${name}
+      const latRaw = (row["Latitude"] || "").trim();
+      const lonRaw = (row["Longitude"] || "").trim();
+      const lat = parseFloat(latRaw);
+      const lon = parseFloat(lonRaw);
+
+      if (city.includes("columbus")) {
+        console.log("Evaluating:", { name, latRaw, lonRaw, lat, lon, status });
+
+        // Only try to add to map if lat/lon are valid numbers
+        if (!isNaN(lat) && !isNaN(lon)) {
+          new mapboxgl.Marker({ color })
+            .setLngLat([lon, lat])
+            .setPopup(new mapboxgl.Popup().setText(`${name}
 Status: ${status}`))
-          .addTo(map);
-        bounds.extend([lon, lat]);
-      } else {
-        console.warn("Skipping pin due to missing lat/lon:", name, latRaw, lonRaw);
+            .addTo(map);
+          bounds.extend([lon, lat]);
+        } else {
+          console.warn("Skipping map pin due to invalid coordinates:", name, latRaw, lonRaw);
+        }
       }
     });
 
