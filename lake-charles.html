@@ -37,73 +37,38 @@
         }
         return gk_fileData[filename] || "";
         }
-        </script><script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
         </script><!DOCTYPE html>
+
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Lake Charles, LA - Dashboard</title>
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
-  <!-- Mapbox dependencies -->
-  <link href="https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.css" rel="stylesheet" />
-  <script src="https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.js"></script>
-  <style>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Lake Charles, LA - Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<style>
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #f4f4f4;
-      margin: 0;
-      padding: 20px;
-      color: #2c5782;
-      text-align: center;
-    }
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #f4f4f4;
+  margin: 0;
+  padding-top: 80px;
+  color: #2c5782;
+  text-align: center;
+}
     header {
-      background-color: #2c5782;
-      padding: 12px 20px;
-      color: white;
-      text-align: center;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
+  background-color: #2c5782;
+  color: white;
+  width: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 999;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  height: 60px;
+  display: flex;
+  align-items: center;
+}
     nav {
       display: flex;
       flex-wrap: wrap;
@@ -149,1121 +114,245 @@
       margin: 20px 0;
       border-radius: 10px;
     }
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 1000;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0,0,0,0.5);
-      overflow: auto;
-    }
-    .modal-content {
-      background-color: #fff;
-      margin: 5% auto;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-      width: 80%;
-      max-width: 800px;
-      text-align: center;
-    }
-    .modal-content h3 {
-      margin: 0 0 15px;
-      color: #2c5782;
-    }
-    .modal-content .device-section {
-      margin: 15px 0;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
-    .modal-content .device-section h4 {
-      margin: 0 0 10px;
-      color: #2c5782;
-    }
-    .modal-content button {
-      padding: 8px 16px;
-      margin: 5px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 0.9em;
-      transition: background-color 0.2s;
-    }
-    .modal-content .on-btn {
-      background-color: #10b981;
-      color: white;
-    }
-    .modal-content .on-btn:hover {
-      background-color: #059669;
-    }
-    .modal-content .off-btn {
-      background-color: #e11d48;
-      color: white;
-    }
-    .modal-content .off-btn:hover {
-      background-color: #be123c;
-    }
-    .modal-content .close-btn {
-      background-color: #6b7280;
-      color: white;
-      margin-top: 10px;
-    }
-    .modal-content .close-btn:hover {
-      background-color: #4b5563;
-    }
-    .modal-content p.status {
-      margin: 8px 0;
-      font-size: 0.85em;
-      color: #2c5782;
-    }
-    #meterMap {
-      height: 400px;
-      width: 100%;
-      border-radius: 10px;
-    }
-    .custom-icon-online {
-      background-color: #10b981;
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      border: 2px solid white;
-    }
-    .custom-icon-offline {
-      background-color: #e11d48;
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      border: 2px solid white;
-    }
-    .meter-marker {
-      width: 5px;
-      height: 5px;
-      border-radius: 50%;
-      border: 1px solid white;
-      opacity: 0.3 !important; /* Increased specificity and !important to enforce opacity */
-    }
-    .meter-marker-red {
-      background-color: #FF0000;
-    }
-    .meter-marker-orange {
-      background-color: #FFA500;
-    }
-    .meter-marker-yellow {
-      background-color: #FFFF00;
-    }
-    .meter-marker-default {
-      background-color: #808080; /* Gray for unexpected percentages */
-    }
     @media screen and (max-width: 600px) {
       nav { flex-direction: column; gap: 8px; }
       h1 { font-size: 1.3em; }
       table { font-size: 0.85em; }
-      .modal-content { width: 90%; margin: 15% auto; }
-      .modal-content button { font-size: 0.8em; padding: 6px 12px; }
-      #meterMap { height: 300px; }
     }
     @media print {
-      header, nav, .nav-toggle, .modal { display: none !important; }
+      header, nav, .nav-toggle { display: none !important; }
       div[style*="box-shadow"], .info { box-shadow: none !important; }
     }
-  </style>
-</head>
+  
+        .nav-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+        
+            .nav-wrapper.active nav {
+                display: flex;
+            }
+            
+            .nav-wrapper.active nav {
+                display: flex;
+            }
+            .hamburger {
+                display: flex;
+            }
+        }
+        
+        .nav-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            cursor: pointer;
+            padding: 10px;
+        }
+        .hamburger div {
+            width: 25px;
+            height: 3px;
+            background-color: white;
+            margin: 4px 0;
+        }
+        @media (max-width: 768px) {
+            nav {
+                display: none;
+                flex-direction: column;
+                background-color: #2c5782;
+                padding: 10px 0;
+            }
+            .nav-wrapper.active nav {
+                display: flex;
+            }
+            .hamburger {
+                display: flex;
+            }
+        }
+        </style>
+<link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet"/><script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script></head>
 <body>
 <header>
-  <nav>
-    <a href="index.html">Home</a>
-    <a href="louisiana.html">Louisiana</a>
-    <a href="bayou-liberty.html">Bayou Liberty</a>
-    <a href="hessmer.html">Hessmer</a>
-    <a href="homer.html">Homer</a>
-    <a href="lake-charles.html">Lake Charles</a>
-    <a href="shreveport.html">Shreveport</a>
-    <a href="westwego.html">Westwego</a>
-  </nav>
+<div class="nav-wrapper"><div class="hamburger" onclick="toggleMenu()"><div></div><div></div><div></div></div><nav>
+<a href="index.html">Home</a>
+<a href="louisiana.html">Louisiana</a>
+<a href="bayou-liberty.html">Bayou Liberty</a>
+<a href="hessmer.html">Hessmer</a>
+<a href="homer.html">Homer</a>
+<a href="lake-charles.html">Lake Charles</a>
+<a href="shreveport.html">Shreveport</a>
+<a href="westwego.html">Westwego</a>
+</nav></div>
 </header>
 <h1>Lake Charles, LA - Dashboard</h1>
 <div style="display: flex; justify-content: center; gap: 20px; margin: 20px 0; flex-wrap: wrap;">
-  <div style="flex: 1 1 300px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 20px; text-align: center;">
-    <h2 style="margin: 0; color: #2c5782;">Total Meters / Missing Reads</h2>
-    <p id="total-missing" style="font-size: 1.8em; margin:10px 0;">Loading...</p>
-  </div>
-  <div style="flex: 1 1 300px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 20px; text-align: center;">
-    <h2 style="margin: 0; color: #2c5782;">Reading Performance</h2>
-    <p id="reading-performance" style="font-size: 2em; margin: 10px 0;">Loading...</p>
-  </div>
-  <div style="flex: 1 1 300px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 20px; text-align: center;">
-    <h2 style="margin: 0; color: #2c5782;">Collector Status</h2>
-    <p id="collector-status" style="font-size: 1.8em; margin: 10px 0;">Loading...</p>
-  </div>
+<div style="flex: 1 1 300px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 20px; text-align: center;">
+<h2 style="margin: 0; color: #2c5782;">Total Meters / Missing Reads</h2>
+<p id="total-missing" style="font-size: 1.8em; margin:10px 0;">Loading...</p>
 </div>
-
-<div style="text-align:center; margin:10px 0;">
-  <label><input type="checkbox" id="toggle-rings" /> Show Range Rings</label>
+<div style="flex: 1 1 300px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 20px; text-align: center;">
+<h2 style="margin: 0; color: #2c5782;">Reading Performance</h2>
+<p id="reading-performance" style="font-size: 2em; margin: 10px 0;">Loading...</p>
 </div>
-
-<div style="text-align:center; margin-top:10px;">
-  <label for="meter-filter">Filter Meters:</label>
-  <select id="meter-filter">
-    <option value="all">All</option>
-    <option value="0.00">0.00%</option>
-    <option value="33.33">33.33%</option>
-    <option value="66.67">66.67%</option>
-    <option value="none">None</option>
-  </select>
+<div style="flex: 1 1 300px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 20px; text-align: center;">
+<h2 style="margin: 0; color: #2c5782;">Collector Status</h2>
+<p id="collector-status" style="font-size: 1.8em; margin: 10px 0;">Loading...</p>
 </div>
-
-<div style="text-align:center; margin-top:10px;">
-  <label for="map-style">Map View:</label>
-  <select id="map-style">
-    <option value="streets-v12">Street</option>
-    <option value="satellite-streets-v12">Satellite</option>
-  </select>
 </div>
-
 <div id="map"></div>
 <div class="info">
-  <table>
-    <thead>
-      <tr><th>Collector Name</th><th>Serial Number</th><th>Last Contact</th><th>Comments</th></tr>
-    </thead>
-    <tbody>
-      <!-- Dynamically populated Lake Charles collectors -->
-    </tbody>
-  </table>
-</div>
-<div style="flex: 1 1 300px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 10px 10px 5px; text-align: center;">
-  <h2 style="margin: 0; color: #b91c1c; font-size: 1.1em;">HIGH Priority Info Codes</h2>
-  <p id="high-priority-codes" style="font-size: 1.6em; margin: 10px 0; color: #b91c1c;"></p>
-  <canvas id="infoCodeChart" height="120" style="margin-top: 10px;"></canvas>
-</div>
-<!-- Modal for Shelly Control -->
-<div id="shellyModal" class="modal">
-  <div class="modal-content">
-    <h3 id="modalCollectorName">Collector Name</h3>
-    <div class="device-section">
-      <h4>Main Power</h4>
-      <p class="status" id="mainPowerStatus">Status: Loading...</p>
-      <button class="on-btn" onclick="toggleShelly('main', 'on')">Turn On</button>
-      <button class="off-btn" onclick="toggleShelly('main', 'off')">Turn Off</button>
-    </div>
-    <div class="device-section">
-      <h4>Top Box Power</h4>
-      <p class="status" id="topBoxPowerStatus">Status: Loading...</p>
-      <button class="on-btn" onclick="toggleShelly('topBox', 'on')">Turn On</button>
-      <button class="off-btn" onclick="toggleShelly('topBox', 'off')">Turn Off</button>
-    </div>
-    <button class="close-btn" onclick="closeModal()">Close</button>
-  </div>
-</div>
-<!-- Modal for Meter Map -->
-<div id="meterMapModal" class="modal">
-  <div class="modal-content">
-    <h3 id="meterMapTitle">Meters with Info Code</h3>
-    
-<div style="text-align:center; margin-bottom:10px;">
-  <label for="modal-map-style">Map View:</label>
-  <select id="modal-map-style">
-    <option value="streets-v12">Street</option>
-    <option value="satellite-streets-v12">Satellite</option>
-  </select>
+<table>
+<thead>
+<tr><th>Collector Name</th><th>Serial Number</th><th>Last Contact</th><th>Comments</th></tr>
+</thead>
+<tbody>
+<!-- Dynamically populated Lake Charles collectors -->
+</tbody>
+</table>
 </div>
 
-<div id="meterMap"></div>
-    <button class="close-btn" onclick="closeMeterMapModal()">Close</button>
-  </div>
-</div>
 <div style="margin-top: 30px;">
-  <a href="louisiana.html" style="display:inline-block;padding:10px 20px;background:#2c5782;color:white;text-decoration:none;border-radius:5px;">← Back to Louisiana Collectors</a>
+<a href="louisiana.html" style="display:inline-block;padding:10px 20px;background:#2c5782;color:white;text-decoration:none;border-radius:5px;">← Back to Louisiana Collectors</a>
 </div>
 <script>
-var gk_isXlsx = false;
-var gk_xlsxFileLookup = {};
-var gk_fileData = {};
-var gk_fileTitleData = {};
-function filledCell(cell) {
-  return cell !== '' && cell != null;
-}
-function loadFileData(filename) {
-  if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-    try {
-      var workbook = XLSX.read(gk_fileData[filename] || gk_fileTitleData[filename], { type: 'base64' });
-      var firstSheetName = workbook.SheetNames[0];
-      var worksheet = workbook.Sheets[firstSheetName];
-      var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-      var filteredData = jsonData.filter(row => row.some(filledCell));
-      var headerRowIndex = filteredData.findIndex((row, index) =>
-        row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-      );
-      if (headerRowIndex === -1 || headerRowIndex > 25) {
-        headerRowIndex = 0;
-      }
-      var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex));
-      csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-      return csv;
-    } catch (e) {
-      console.error(e);
-      return "";
-    }
-  }
-  return gk_fileData[filename] || gk_fileTitleData[filename] || "";
-}
-function updateCollectorStatus() {
+document.addEventListener("DOMContentLoaded", function () {
+  mapboxgl.accessToken = 'pk.eyJ1Ijoiam9zZXBoLWhlYmVydCIsImEiOiJjbWF5ZG0wcTYwODJmMmxwdDI1MjNxenVlIn0.DPzjMzumd_bBfVS0Rqs3Xw';
+  const map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/mapbox/streets-v12',
+    center: [-93.2174, 30.2266],
+    zoom: 12
+  });
+
+  const green = '#10b981';
+  const red = '#e11d48';
+
   Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=96572475&single=true&output=csv", {
     download: true,
-    header: false,
+    header: true,
     complete: function(results) {
-      const data = results.data.slice(1);
-      let onlineCount = 0;
-      let offlineCount = 0;
+      const data = results.data.filter(row =>
+        row["City"]?.trim().toLowerCase() === "lake-charles" &&
+        row["Latitude"] &&
+        row["Longitude"]
+      );
+
+      const bounds = new mapboxgl.LngLatBounds();
+
       data.forEach(row => {
-        const city = row[0]?.trim().toLowerCase();
-        const issue = row[5]?.trim();
-        if (city === "lake charles") {
-          if (issue === "Yes") offlineCount++;
-          else if (issue === "No") onlineCount++;
+        const name = row["Collector Name"] || "Unknown";
+        const lat = parseFloat(row["Latitude"]);
+        const lon = parseFloat(row["Longitude"]);
+        const status = row["Collector Issue"]?.trim().toLowerCase() === "yes" ? "Offline" : "Online";
+        const color = status === "Online" ? green : red;
+
+        if (!isNaN(lat) && !isNaN(lon)) {
+          new mapboxgl.Marker({ color })
+            .setLngLat([lon, lat])
+            .setPopup(new mapboxgl.Popup().setText(`${name}\nStatus: ${status}`))
+            .addTo(map);
+          bounds.extend([lon, lat]);
         }
       });
-      const statusEl = document.getElementById("collector-status");
-      statusEl.innerText = `Online: ${onlineCount} / Offline: ${offlineCount}`;
-      statusEl.style.color = offlineCount > 0 ? "#e11d48" : "#10b981";
-    },
-    error: function(error) {
-      console.error("Failed to fetch collector status:", error);
-      document.getElementById("collector-status").innerText = "Error loading status";
+
+      if (!bounds.isEmpty()) {
+        map.fitBounds(bounds, { padding: 100, maxZoom: 14 });
+      }
     }
   });
-}
-function updateReadingAndMissingData() {
+
+  map.on('load', () => map.resize());
+
+  // Load collector status for Lake Charles
+  Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=96572475&single=true&output=csv", {
+    download: true,
+    header: true,
+    complete: function(results) {
+      const collectors = results.data.filter(row =>
+        row["City"]?.trim().toLowerCase() === "lake-charles"
+      );
+
+      let onlineCount = 0;
+      let offlineCount = 0;
+
+      collectors.forEach(row => {
+        const issue = row["Collector Issue"]?.trim().toLowerCase();
+        if (issue === "yes") offlineCount++;
+        else if (issue === "no") onlineCount++;
+      });
+
+      document.getElementById("collector-status").textContent = `${onlineCount} Online / ${offlineCount} Offline`;
+
+
+  // Populate collector table
+  Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=96572475&single=true&output=csv", {
+    download: true,
+    header: true,
+    complete: function(results) {
+      const tableBody = document.querySelector("tbody");
+      const collectors = results.data.filter(row =>
+        row["City"]?.trim().toLowerCase() === "lake-charles"
+      );
+
+      tableBody.innerHTML = "";
+
+      collectors.forEach(row => {
+        const name = row["Collector Name"] || "";
+        const serial = row["Serial Number"] || "";
+        const lastContact = row["Last Contact"] || "";
+        const comments = row["Comments"] || "";
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${name}</td><td>${serial}</td><td>${lastContact}</td><td>${comments}</td>`;
+        tableBody.appendChild(tr);
+      });
+    }
+  });
+
+    }
+  });
+
+});
+</script>
+<script>
+    function toggleMenu() {
+        const wrapper = document.querySelector('.nav-wrapper');
+        wrapper.classList.toggle('active');
+    }
+    </script>
+<script>
+  // Load city performance data
   Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=0&single=true&output=csv", {
     download: true,
     header: true,
     complete: function(results) {
-      const data = results.data;
-      const row = data.find(r => r["City"]?.trim().toLowerCase() === "lake charles");
+      const row = results.data.find(r =>
+        (r["City"] || "").trim().toLowerCase() === "lake-charles"
+      );
+
       if (row) {
-        document.getElementById("total-missing").innerText = `${row["Total Meters"] || "N/A"} / ${row["Meters with Missing Reads"] || "N/A"}`;
-        document.getElementById("reading-performance").innerText = `${row["Performance (%)"] || "N/A"}%`;
+        const performance = row["Performance (%)"] || "N/A";
+        const totalMeters = row["Total Meters"] || "N/A";
+        const missingReads = row["Meters with Missing Reads"] || "N/A";
+
+        document.getElementById("reading-performance").textContent = `${performance}%`;
+        document.getElementById("total-missing").textContent = `${totalMeters} / ${missingReads}`;
       } else {
-        document.getElementById("total-missing").innerText = "Not Found";
-        document.getElementById("reading-performance").innerText = "Not Found";
+        document.getElementById("reading-performance").textContent = "No data";
+        document.getElementById("total-missing").textContent = "No data";
       }
-    },
-    error: function(error) {
-      console.error("Failed to fetch reading data:", error);
-      document.getElementById("total-missing").innerText = "Error";
-      document.getElementById("reading-performance").innerText = "Error";
     }
   });
-}
-function renderInfoCodeChart() {
-  Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQIA7LGRH_4JfIMDaHhp12-DhSD37xexpulbwumfFDBoA9rF8y6RtgepNxeO1EkRS_t0UtVzG8cFsFc/pub?gid=1198809600&single=true&output=csv", {
-    download: true,
-    header: true,
-    complete: function(results) {
-      const data = results.data.filter(r => r["Info Code"] && r["Count"]);
-      const labels = data.map(row => row["Info Code"]);
-      const counts = data.map(row => parseInt(row["Count"], 10));
-      const ctx = document.getElementById("infoCodeChart");
-      if (ctx) {
-        Chart.register(ChartDataLabels);
-        new Chart(ctx.getContext("2d"), {
-          type: "bar",
-          data: {
-            labels: labels,
-            datasets: [{ label: "Count", data: counts, backgroundColor: "#f87171" }]
-          },
-          options: {
-            responsive: true,
-            scales: { y: { beginAtZero: true } },
-            plugins: {
-              legend: { display: false },
-              title: { display: true, text: "Info Codes (Lake Charles)", font: { size: 16 } },
-              tooltip: { callbacks: { label: context => `Count: ${context.raw}` } },
-              datalabels: {
-                anchor: 'end',
-                align: 'top',
-                color: '#2c5782',
-                font: { weight: 'bold' },
-                formatter: (value) => value
-              }
-            },
-            onClick: (event, elements) => {
-              if (elements.length > 0) {
-                const index = elements[0].index;
-                const infoCode = labels[index];
-                showMeterMapModal(infoCode);
-              }
-            }
-          }
-        });
-      }
-    },
-    error: function(error) {
-      console.error("Failed to fetch info codes:", error);
-      document.getElementById("high-priority-codes").innerText = "Error loading codes";
-    }
-  });
-}
-function updateCollectorTable() {
-  Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=96572475&single=true&output=csv", {
-    download: true,
-    header: true,
-    complete: function(results) {
-      const data = results.data;
-      const tableBody = document.querySelector(".info tbody");
-      tableBody.innerHTML = "";
-      const filtered = data.filter(row => row["City"]?.trim().toLowerCase() === "lake charles");
-      filtered.forEach(row => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${row["Collector Name"] || "N/A"}</td>
-          <td>${row["Serial Number"] || "N/A"}</td>
-          <td>${row["Last Contact"] || "N/A"}</td>
-          <td>${row["Comments"] || ""}</td>
-        `;
-        tableBody.appendChild(tr);
-      });
-    },
-    error: function(error) {
-      console.error("Failed to fetch collector table data:", error);
-      const tableBody = document.querySelector(".info tbody");
-      tableBody.innerHTML = "<tr><td colspan='4'>Error loading data</td></tr>";
-    }
-  });
-}
-let currentCollector = null;
-let shellyCloudConfig = {};
-const shellyAuthToken = "Mjg0MTk5dWlkB3CC6E5EBB4F7061B628D6601449342BA34EF11B7AA3F8FAD4F690F2E0160EFEF774114517BBB426"; // Replace with your Shelly Cloud API token
-async function getShellyStatus(collectorName, deviceType) {
-  const config = shellyCloudConfig[collectorName];
-  const deviceId = config && config[deviceType === 'main' ? 'mainPower' : 'topBoxPower'];
-  if (!deviceId) return "Error: No Shelly config";
-  try {
-    const response = await fetch(`https://api.shelly.cloud/v1/devices/${deviceId}/status`, {
-      headers: { Authorization: `Bearer ${shellyAuthToken}` }
-    });
-    const data = await response.json();
-    return data.data.relay_0 ? "On" : "Off";
-  } catch (error) {
-    console.error(`Failed to fetch ${deviceType} Shelly status for ${collectorName}:`, error);
-    return "Unknown";
-  }
-}
-async function toggleShelly(deviceType, state) {
-  if (!currentCollector) return;
-  const config = shellyCloudConfig[currentCollector];
-  const deviceId = config && config[deviceType === 'main' ? 'mainPower' : 'topBoxPower'];
-  if (!deviceId) {
-    document.getElementById(`${deviceType}PowerStatus`).innerText = "Error: No Shelly config";
-    return;
-  }
-  const statusEl = document.getElementById(`${deviceType}PowerStatus`);
-  statusEl.innerText = "Sending command...";
-  try {
-    const response = await fetch(`https://api.shelly.cloud/v1/devices/${deviceId}/commands`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${shellyAuthToken}`
-      },
-      body: JSON.stringify({ command: state === 'on' ? 'relay_0_on' : 'relay_0_off' })
-    });
-    const data = await response.json();
-    if (data.isok) {
-      const newStatus = await getShellyStatus(currentCollector, deviceType);
-      statusEl.innerText = `Status: ${newStatus}`;
-    } else {
-      statusEl.innerText = "Error: Command failed";
-    }
-  } catch (error) {
-    console.error(`Failed to toggle ${deviceType} Shelly for ${currentCollector}:`, error);
-    statusEl.innerText = "Error: Failed to send command";
-  }
-}
-function showModal(collectorName, isOnline) {
-  currentCollector = collectorName;
-  const modal = document.getElementById("shellyModal");
-  const modalCollectorName = document.getElementById("modalCollectorName");
-  const mainPowerStatus = document.getElementById("mainPowerStatus");
-  const topBoxPowerStatus = document.getElementById("topBoxPowerStatus");
-  modalCollectorName.innerText = collectorName;
-  mainPowerStatus.innerText = "Status: Loading...";
-  topBoxPowerStatus.innerText = "Status: Loading...";
-  modal.style.display = "block";
-
-  const modalStyleSelect = document.getElementById("modal-map-style");
-  if (modalStyleSelect) {
-    modalStyleSelect.addEventListener("change", function(e) {
-      if (meterMapInstance) {
-        meterMapInstance.setStyle("mapbox://styles/mapbox/" + e.target.value);
-        meterMapInstance.once("style.load", () => {
-          collectorLocations.forEach(([lat, lon, name]) => {
-            const markerEl = document.createElement("div");
-            markerEl.className = "custom-icon-online";
-            markerEl.style.transform = "scale(0.5)";
-            new mapboxgl.Marker({ element: markerEl })
-              .setLngLat([lon, lat])
-              .setPopup(new mapboxgl.Popup().setHTML(`<b>${name}</b><br>Collector Site`))
-              .addTo(meterMapInstance);
-          });
-
-          locations.forEach(([lon, lat], index) => {
-            const meterEl = document.createElement("div");
-            meterEl.style.width = "8px";
-            meterEl.style.height = "8px";
-            meterEl.style.backgroundColor = "#f87171";
-            meterEl.style.borderRadius = "50%";
-            meterEl.style.border = "1px solid white";
-
-            new mapboxgl.Marker({ element: meterEl })
-              .setLngLat([lon, lat])
-              .setPopup(new mapboxgl.Popup().setHTML(meterTooltips[index]))
-              .addTo(meterMapInstance);
-          });
-        });
-      }
-    });
-  }
-
-  const config = shellyCloudConfig[collectorName];
-  if (config) {
-    if (config.mainPower) {
-      getShellyStatus(collectorName, 'main').then(status => {
-        mainPowerStatus.innerText = `Status: ${status}`;
-      });
-    } else {
-      mainPowerStatus.innerText = "Error: No Main Power config";
-    }
-    if (config.topBoxPower) {
-      getShellyStatus(collectorName, 'topBox').then(status => {
-        topBoxPowerStatus.innerText = `Status: ${status}`;
-      });
-    } else {
-      topBoxPowerStatus.innerText = "Error: No Top Box Power config";
-    }
-  } else {
-    mainPowerStatus.innerText = "Error: No Shelly config";
-    topBoxPowerStatus.innerText = "Error: No Shelly config";
-  }
-}
-function closeModal() {
-  const modal = document.getElementById("shellyModal");
-  modal.style.display = "none";
-  currentCollector = null;
-}
-async function geocodeAddress(address, city, zipCode) {
-  const query = encodeURIComponent(`${address}, ${city}, LA ${zipCode}`);
-  const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${query}.json?access_token=pk.eyJ1Ijoiam9zZXBoLWhlYmVydCIsImEiOiJjbWFsaXlyMWEwOXByMm5vcTcwNXluZDFmIn0.IcFUYqDiW9phV6OYZbISjw`;
-  try {
-    const response = await fetch(url);
-    const data = await response.json();
-    if (data.features && data.features.length > 0) {
-      const [lon, lat] = data.features[0].geometry.coordinates;
-      return { lat, lon };
-    }
-    return null;
-  } catch (error) {
-    console.error(`Geocoding failed for ${query}:`, error);
-    return null;
-  }
-}
-let meterMapInstance = null;
-function showMeterMapModal(infoCode) {
-  console.log(`Opening meter map modal for info code: ${infoCode}`);
-  const modal = document.getElementById("meterMapModal");
-  const title = document.getElementById("meterMapTitle");
-  title.innerText = `Meters with Info Code ${infoCode}`;
-  modal.style.display = "block";
-
-  const modalStyleSelect = document.getElementById("modal-map-style");
-  if (modalStyleSelect) {
-    modalStyleSelect.addEventListener("change", function(e) {
-      if (meterMapInstance) {
-        meterMapInstance.setStyle("mapbox://styles/mapbox/" + e.target.value);
-        meterMapInstance.once("style.load", () => {
-          collectorLocations.forEach(([lat, lon, name]) => {
-            const markerEl = document.createElement("div");
-            markerEl.className = "custom-icon-online";
-            markerEl.style.transform = "scale(0.5)";
-            new mapboxgl.Marker({ element: markerEl })
-              .setLngLat([lon, lat])
-              .setPopup(new mapboxgl.Popup().setHTML(`<b>${name}</b><br>Collector Site`))
-              .addTo(meterMapInstance);
-          });
-
-          locations.forEach(([lon, lat], index) => {
-            const meterEl = document.createElement("div");
-            meterEl.style.width = "8px";
-            meterEl.style.height = "8px";
-            meterEl.style.backgroundColor = "#f87171";
-            meterEl.style.borderRadius = "50%";
-            meterEl.style.border = "1px solid white";
-
-            new mapboxgl.Marker({ element: meterEl })
-              .setLngLat([lon, lat])
-              .setPopup(new mapboxgl.Popup().setHTML(meterTooltips[index]))
-              .addTo(meterMapInstance);
-          });
-        });
-      }
-    });
-  }
-
-  // Clean up previous map
-  if (meterMapInstance) {
-    meterMapInstance.remove();
-    meterMapInstance = null;
-  }
-
-  // Initialize new Mapbox map
-  const mapContainer = document.getElementById("meterMap");
-  mapContainer.innerHTML = "";
-  mapboxgl.accessToken = 'pk.eyJ1Ijoiam9zZXBoLWhlYmVydCIsImEiOiJjbWFsaXlyMWEwOXByMm5vcTcwNXluZDFmIn0.IcFUYqDiW9phV6OYZbISjw';
-  meterMapInstance = new mapboxgl.Map({
-    container: 'meterMap',
-    style: 'mapbox://styles/mapbox/streets-v12',
-    center: [-93.2174, 30.2266], // Lake Charles
-    zoom: 12
-  });
-
-  
-  const collectorLocations = [
-    [30.220558, -93.162325, "Main Street Tower"],
-    [30.205775, -93.236622, "Wastewater Plant"],
-    [30.249414, -93.194447, "Fire Station #3"],
-    [30.178947, -93.246383, "Alma Lane Water Plant"],
-    [30.162100, -93.282336, "Fire Station #8"],
-    [30.226611, -93.204167, "Police HQ"],
-    [30.199267, -93.212056, "Center Street WTP"]
-  ];
-
-  collectorLocations.forEach(([lat, lon, name]) => {
-    const markerEl = document.createElement("div");
-    markerEl.className = "custom-icon-online";
-    markerEl.style.transform = "scale(0.5)";
-    new mapboxgl.Marker({ element: markerEl })
-      .setLngLat([lon, lat])
-      .setPopup(new mapboxgl.Popup().setHTML(`<b>${name}</b><br>Collector Site`))
-      .addTo(meterMapInstance);
-  });
-
-  // Fetch meter data
-  Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQIA7LGRH_4JfIMDaHhp12-DhSD37xexpulbwumfFDBoA9rF8y6RtgepNxeO1EkRS_t0UtVzG8cFsFc/pub?gid=63920378&single=true&output=csv", {
-    download: true,
-    header: true,
-    complete: async function(results) {
-      console.log("Raw meter data:", results.data);
-      // Log all unique info codes
-      const allInfoCodes = new Set();
-      results.data.forEach(row => {
-        const infoCodes = row["Info code"]?.trim().split(',').map(code => code.trim()).filter(code => code);
-        infoCodes.forEach(code => allInfoCodes.add(code));
-      });
-      console.log("All unique info codes in sheet:", Array.from(allInfoCodes));
-      const data = results.data.filter(row => {
-        const infoCodes = row["Info code"]?.trim().split(',').map(code => code.trim()).filter(code => code);
-        console.log(`Row info codes: ${infoCodes}, Checking for: ${infoCode}`);
-        return infoCodes && infoCodes.some(code => code.toLowerCase() === infoCode.toLowerCase());
-      });
-      console.log(`Filtered data for ${infoCode}:`, data);
-      if (data.length === 0) {
-        console.log("No meters found for this info code. Check console for unique info codes.");
-        new mapboxgl.Marker()
-          .setLngLat([-93.2174, 30.2266])
-          .setPopup(new mapboxgl.Popup().setHTML("No meters found for this info code. Check console for details."))
-          .addTo(meterMapInstance);
-        return;
-      }
-
-      const locations = [];
-      for (let i = 0; i < data.length; i++) {
-        const row = data[i];
-        const address = row["Address"]?.trim();
-        const city = row["City"]?.trim();
-        const zipCode = row["ZIP code"]?.trim();
-        const serialNumber = row["Serial number"]?.trim() || "N/A";
-        const infoCodes = row["Info code"]?.trim() || "N/A";
-        console.log(`Processing meter ${serialNumber} at ${address}, ${city}, ${zipCode}`);
-        if (address && city && zipCode) {
-          const coords = await geocodeAddress(address, city, zipCode);
-          if (coords) {
-            locations.push([coords.lon, coords.lat]);
-            const meterEl = document.createElement("div");
-            meterEl.style.width = "8px";
-            meterEl.style.height = "8px";
-            meterEl.style.backgroundColor = "#f87171";
-            meterEl.style.borderRadius = "50%";
-            meterEl.style.border = "1px solid white";
-
-            new mapboxgl.Marker({ element: meterEl })
-              .setLngLat([coords.lon, coords.lat])
-              .setPopup(new mapboxgl.Popup().setHTML(`
-                <b>Meter: ${serialNumber}</b><br>
-                Address: ${address}, ${city}, ${zipCode}<br>
-                Info Codes: ${infoCodes}
-              `))
-              .addTo(meterMapInstance);
-            console.log(`Added pin for ${serialNumber} at [${coords.lat}, ${coords.lon}]`);
-          } else {
-            console.log(`Geocoding failed for ${address}, ${city}, ${zipCode}`);
-          }
-        } else {
-          console.log(`Skipping meter ${serialNumber}: Missing address, city, or zip code`);
-        }
-        // Delay for Mapbox geocoding
-        if (i < data.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, 100));
-        }
-      }
-
-      // Adjust view to show all meter pins + collectors
-      const bounds = new mapboxgl.LngLatBounds();
-      locations.forEach(([lon, lat]) => bounds.extend([lon, lat]));
-      collectorLocations.forEach(([lat, lon]) => bounds.extend([lon, lat]));
-      if (!bounds.isEmpty()) {
-        meterMapInstance.fitBounds(bounds, { padding: 30, maxZoom: 14 });
-      }
-
-      if (locations.length > 0) {
-        const bounds = locations.reduce((bounds, coord) => {
-          return bounds.extend(coord);
-        }, new mapboxgl.LngLatBounds(locations[0], locations[0]));
-        meterMapInstance.fitBounds(bounds, { padding: 30, maxZoom: 15 });
-        console.log("Map bounds adjusted to fit locations:", locations);
-      } else {
-        console.log("No valid locations found.");
-        new mapboxgl.Marker()
-          .setLngLat([-93.2174, 30.2266])
-          .setPopup(new mapboxgl.Popup().setHTML("No valid locations found. Check console for geocoding issues."))
-          .addTo(meterMapInstance);
-      }
-    },
-    error: function(error) {
-      console.error("Failed to fetch meter data:", error);
-      new mapboxgl.Marker()
-        .setLngLat([-93.2174, 30.2266])
-        .setPopup(new mapboxgl.Popup().setHTML("Error loading meter data."))
-        .addTo(meterMapInstance);
-    }
-  });
-}
-function closeMeterMapModal() {
-  const modal = document.getElementById("meterMapModal");
-  modal.style.display = "none";
-  if (meterMapInstance) {
-    meterMapInstance.remove();
-    meterMapInstance = null;
-  }
-  document.getElementById("meterMap").innerHTML = "";
-}
-
-function createGeoJSONCircle(center, radiusInMeters, points = 64) {
-  const coords = {
-    latitude: center[1],
-    longitude: center[0]
-  };
-  const km = radiusInMeters / 1000;
-  const ret = [];
-  const distanceX = km / (111.320 * Math.cos(coords.latitude * Math.PI / 180));
-  const distanceY = km / 110.574;
-  for (let i = 0; i < points; i++) {
-    const theta = (i / points) * (2 * Math.PI);
-    const x = distanceX * Math.cos(theta);
-    const y = distanceY * Math.sin(theta);
-    ret.push([coords.longitude + x, coords.latitude + y]);
-  }
-  ret.push(ret[0]);
-  return {
-    type: "Feature",
-    geometry: { type: "Polygon", coordinates: [ret] }
-  };
-}
-
-const rangeCenters = [
-  [30.220558, -93.162325, "Main Street Tower"],
-  [30.205775, -93.236622, "Wastewater Plant"],
-  [30.249414, -93.194447, "Fire Station #3"],
-  [30.178947, -93.246383, "Alma Lane Water Plant"],
-  [30.162100, -93.282336, "Fire Station #8"],
-  [30.226611, -93.204167, "Police HQ"],
-  [30.199267, -93.212056, "Center Street WTP"]
-];
-
-// Global array to store meter markers and their performance percentages
-let meterMarkers = [];
-
-function renderRangeRings(map) {
-  rangeCenters.forEach(([lat, lon, name]) => {
-    [0.5, 1, 1.5, 2].forEach(miles => {
-      const radiusMeters = miles * 1609.34;
-      const circleId = `ring-${name.replace(/\s+/g, '-')}-${miles}`;
-      const geojson = createGeoJSONCircle([lon, lat], radiusMeters);
-      if (!map.getSource(circleId)) {
-        map.addSource(circleId, { type: "geojson", data: geojson });
-        map.addLayer({
-          id: circleId,
-          type: "line",
-          source: circleId,
-          layout: { visibility: "none" },
-          paint: {
-            "line-color": "#1d4ed8",
-            "line-opacity": 0.8,
-            "line-width": 2,
-            "line-dasharray": [2, 4]
-          }
-        });
-      }
-    });
-  });
-}
-
-function initializeMap() {
-  mapboxgl.accessToken = 'pk.eyJ1Ijoiam9zZXBoLWhlYmVydCIsImEiOiJjbWFsaXlyMWEwOXByMm5vcTcwNXluZDFmIn0.IcFUYqDiW9phV6OYZbISjw';
-  window.map = new mapboxgl.Map({
-    container: 'map',
-    style: 'mapbox://styles/mapbox/streets-v12',
-    center: [-93.2174, 30.2266], // Lake Charles
-    zoom: 12
-  });
-
-  const bounds = new mapboxgl.LngLatBounds();
-
-  // Fetch and render collector data
-  Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=96572475&single=true&output=csv", {
-    download: true,
-    header: true,
-    complete: function(results) {
-      const data = results.data;
-      console.log("Raw Google Sheet Data (Collectors):", data);
-      const lakeCharlesCollectors = data.filter(row => row["City"]?.trim().toLowerCase() === "lake charles");
-      console.log("Lake Charles Collectors:", lakeCharlesCollectors);
-      lakeCharlesCollectors.forEach(row => {
-        if (row["Collector Name"]) {
-          shellyCloudConfig[row["Collector Name"]] = {
-            mainPower: row["Main Power Device ID"] || null,
-            topBoxPower: row["Top Box Power Device ID"] || null
-          };
-        }
-      });
-      console.log("Shelly Cloud Config:", shellyCloudConfig);
-      const locations = [
-        [30.220558, -93.162325, "Main Street Tower"],
-        [30.205775, -93.236622, "Wastewater Plant"],
-        [30.249414, -93.194447, "Fire Station #3"],
-        [30.178947, -93.246383, "Alma Lane Water Plant"],
-        [30.162100, -93.282336, "Fire Station #8"],
-        [30.226611, -93.204167, "Police HQ"],
-        [30.199267, -93.212056, "Center Street WTP"]
-      ];
-      console.log("Processing Collector Locations:", locations);
-      locations.forEach(([lat, lon, name], index) => {
-        console.log(`Processing Collector Location #${index + 1}: ${name} at [${lat}, ${lon}]`);
-        const collector = lakeCharlesCollectors.find(row => row["Collector Name"]?.trim().toLowerCase() === name.toLowerCase());
-        const issueValue = collector ? collector["Collector Issue"]?.trim() : null;
-        const isOnline = issueValue === "No" || !collector || issueValue !== "Yes";
-        if (!collector) {
-          console.warn(`Collector not found in Google Sheet for: ${name}`);
-        }
-        console.log(`Collector: ${name}, Issue: ${issueValue}, Online: ${isOnline}`);
-        const markerEl = document.createElement('div');
-        markerEl.className = isOnline ? 'custom-icon-online' : 'custom-icon-offline';
-        const popupContent = `
-          <b>${name}</b><br>
-          Status: ${isOnline ? 'Online' : 'Offline'}<br>
-          <button onclick="showModal('${name}', ${isOnline})">Control Shelly</button>
-        `;
-        try {
-          new mapboxgl.Marker({ element: markerEl })
-            .setLngLat([lon, lat])
-            .setPopup(new mapboxgl.Popup().setHTML(popupContent))
-            .addTo(window.map);
-          console.log(`Marker added for collector ${name}`);
-          bounds.extend([lon, lat]);
-        } catch (error) {
-          console.error(`Failed to add marker for ${name}:`, error);
-        }
-      });
-
-      // Fetch and render meter data
-      Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vRPuL40wt_TX5FWcfwErPK3SEbj70OzqCZFzyBgtsEASoE55EP5SSo9FbV9KmC_MXlWnvosz6bkI8FU/pub?gid=0&single=true&output=csv", {
-        download: true,
-        header: false,
-        complete: function(results) {
-          const data = results.data.slice(14); // Skip first 14 rows (0-based index, so row 15 is index 14)
-          console.log("Raw Meter Data:", data);
-          data.forEach((row, index) => {
-            console.log(`Raw Row ${index + 15}:`, row); // Log the entire row for debugging
-            const meterNumber = row[0]?.trim() || "N/A";
-            const address = row[1]?.trim() || "N/A";
-            const performance = parseFloat(row[3]?.trim()); // Column D (index 3)
-            // Latitude and Longitude from columns H and I (indices 7 and 8)
-            const latRaw = row[7]?.trim();
-            const lonRaw = row[8]?.trim();
-            const lat = parseFloat(latRaw);
-            const lon = parseFloat(lonRaw);
-            console.log(`Processing Meter #${index + 1}: ${meterNumber} at [lat: ${latRaw} -> ${lat}, lon: ${lonRaw} -> ${lon}] with performance ${performance}%`);
-
-            if (!isNaN(lat) && !isNaN(lon) && !isNaN(performance)) {
-              // Validate coordinates are within Lake Charles area
-              if (lat >= 30.0 && lat <= 30.5 && lon >= -93.5 && lon <= -93.0) {
-                let markerClass;
-                if (performance === 0.00) {
-                  markerClass = 'meter-marker-red';
-                } else if (performance === 33.33) {
-                  markerClass = 'meter-marker-orange';
-                } else if (performance === 66.67) {
-                  markerClass = 'meter-marker-yellow';
-                } else {
-                  markerClass = 'meter-marker-default';
-                  console.warn(`Unexpected performance value ${performance} for meter ${meterNumber}`);
-                }
-
-                const meterEl = document.createElement("div");
-                meterEl.className = `meter-marker ${markerClass}`;
-                // Explicitly set opacity to ensure it persists
-                meterEl.style.opacity = "0.3";
-                const popupContent = `
-                  <b>Meter: ${meterNumber}</b><br>
-                  Address: ${address}
-                `;
-                try {
-                  const marker = new mapboxgl.Marker({ element: meterEl })
-                    .setLngLat([lon, lat])
-                    .setPopup(new mapboxgl.Popup().setHTML(popupContent))
-                    .addTo(window.map);
-                  // Ensure opacity is set after adding to map
-                  marker.getElement().style.opacity = "0.3";
-                  console.log(`Marker added for meter ${meterNumber} at [${lon}, ${lat}]`);
-                  // Store marker and its performance for filtering
-                  meterMarkers.push({ marker, performance });
-                  bounds.extend([lon, lat]);
-                } catch (error) {
-                  console.error(`Failed to add marker for meter ${meterNumber}:`, error);
-                }
-              } else {
-                console.warn(`Meter ${meterNumber} has coordinates outside Lake Charles: [${lat}, ${lon}]`);
-              }
-            } else {
-              console.warn(`Skipping meter ${meterNumber}: Invalid lat(${latRaw} -> ${lat}), lon(${lonRaw} -> ${lon}), or performance(${performance})`);
-            }
-          });
-
-          // Adjust map bounds to include collectors and meters
-          if (!bounds.isEmpty()) {
-            window.map.fitBounds(bounds, { padding: 30, maxZoom: 11 });
-            console.log("Map bounds adjusted to include collectors and meters");
-          } else {
-            console.warn("No valid bounds calculated; using default view");
-          }
-
-          // Add event listener for meter filter
-          const meterFilterSelect = document.getElementById("meter-filter");
-          meterFilterSelect.addEventListener("change", function(e) {
-            const filterValue = e.target.value;
-            console.log(`Filtering meters by: ${filterValue}`);
-            meterMarkers.forEach(({ marker, performance }) => {
-              if (filterValue === "all") {
-                marker.addTo(window.map);
-                marker.getElement().style.opacity = "0.3"; // Reapply opacity after adding
-              } else if (filterValue === "none") {
-                marker.remove();
-              } else {
-                const filterPerformance = parseFloat(filterValue);
-                if (performance === filterPerformance) {
-                  marker.addTo(window.map);
-                  marker.getElement().style.opacity = "0.3"; // Reapply opacity after adding
-                } else {
-                  marker.remove();
-                }
-              }
-            });
-          });
-        },
-        error: function(error) {
-          console.error("Failed to fetch meter data:", error);
-          // Still adjust bounds for collectors if meters fail
-          if (!bounds.isEmpty()) {
-            window.map.fitBounds(bounds, { padding: 30, maxZoom: 11 });
-            console.log("Map bounds adjusted for collectors only");
-          }
-        }
-      });
-    },
-    error: function(error) {
-      console.error("Failed to fetch collector data from Google Sheet:", error);
-      const locations = [
-        [30.220558, -93.162325, "Main Street Tower"],
-        [30.205775, -93.236622, "Wastewater Plant"],
-        [30.249414, -93.194447, "Fire Station #3"],
-        [30.178947, -93.246383, "Alma Lane Water Plant"],
-        [30.162100, -93.282336, "Fire Station #8"],
-        [30.226611, -93.204167, "Police HQ"],
-        [30.199267, -93.212056, "Center Street WTP"]
-      ];
-      console.log("Using fallback collector locations:", locations);
-      locations.forEach(([lat, lon, name], index) => {
-        console.log(`Processing Fallback Collector Location #${index + 1}: ${name} at [${lat}, ${lon}]`);
-        const markerEl = document.createElement('div');
-        markerEl.className = 'custom-icon-online';
-        const popupContent = `
-          <b>${name}</b><br>
-          Status: Online (Error)<br>
-          <button onclick="showModal('${name}', true)">Control Shelly</button>
-        `;
-        try {
-          new mapboxgl.Marker({ element: markerEl })
-            .setLngLat([lon, lat])
-            .setPopup(new mapboxgl.Popup().setHTML(popupContent))
-            .addTo(window.map);
-          console.log(`Fallback marker added for collector ${name}`);
-          bounds.extend([lon, lat]);
-        } catch (error) {
-          console.error(`Failed to add fallback marker for ${name}:`, error);
-        }
-      });
-
-      // Fetch meter data even if collectors fail
-      Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vRPuL40wt_TX5FWcfwErPK3SEbj70OzqCZFzyBgtsEASoE55EP5SSo9FbV9KmC_MXlWnvosz6bkI8FU/pub?gid=0&single=true&output=csv", {
-        download: true,
-        header: false,
-        complete: function(results) {
-          const data = results.data.slice(14);
-          console.log("Raw Meter Data (Fallback):", data);
-          data.forEach((row, index) => {
-            console.log(`Raw Row ${index + 15}:`, row); // Log the entire row for debugging
-            const meterNumber = row[0]?.trim() || "N/A";
-            const address = row[1]?.trim() || "N/A";
-            const performance = parseFloat(row[3]?.trim());
-            const latRaw = row[7]?.trim();
-            const lonRaw = row[8]?.trim();
-            const lat = parseFloat(latRaw);
-            const lon = parseFloat(lonRaw);
-            console.log(`Processing Meter #${index + 1}: ${meterNumber} at [lat: ${latRaw} -> ${lat}, lon: ${lonRaw} -> ${lon}] with performance ${performance}%`);
-
-            if (!isNaN(lat) && !isNaN(lon) && !isNaN(performance)) {
-              if (lat >= 30.0 && lat <= 30.5 && lon >= -93.5 && lon <= -93.0) {
-                let markerClass;
-                if (performance === 0.00) {
-                  markerClass = 'meter-marker-red';
-                } else if (performance === 33.33) {
-                  markerClass = 'meter-marker-orange';
-                } else if (performance === 66.67) {
-                  markerClass = 'meter-marker-yellow';
-                } else {
-                  markerClass = 'meter-marker-default';
-                  console.warn(`Unexpected performance value ${performance} for meter ${meterNumber}`);
-                }
-
-                const meterEl = document.createElement("div");
-                meterEl.className = `meter-marker ${markerClass}`;
-                // Explicitly set opacity to ensure it persists
-                meterEl.style.opacity = "0.3";
-                const popupContent = `
-                  <b>Meter: ${meterNumber}</b><br>
-                  Address: ${address}
-                `;
-                try {
-                  const marker = new mapboxgl.Marker({ element: meterEl })
-                    .setLngLat([lon, lat])
-                    .setPopup(new mapboxgl.Popup().setHTML(popupContent))
-                    .addTo(window.map);
-                  // Ensure opacity is set after adding to map
-                  marker.getElement().style.opacity = "0.3";
-                  console.log(`Marker added for meter ${meterNumber} at [${lon}, ${lat}]`);
-                  meterMarkers.push({ marker, performance });
-                  bounds.extend([lon, lat]);
-                } catch (error) {
-                  console.error(`Failed to add marker for meter ${meterNumber}:`, error);
-                }
-              } else {
-                console.warn(`Meter ${meterNumber} has coordinates outside Lake Charles: [${lat}, ${lon}]`);
-              }
-            } else {
-              console.warn(`Skipping meter ${meterNumber}: Invalid lat(${latRaw} -> ${lat}), lon(${lonRaw} -> ${lon}), or performance(${performance})`);
-            }
-          });
-
-          if (!bounds.isEmpty()) {
-            window.map.fitBounds(bounds, { padding: 30, maxZoom: 11 });
-            console.log("Fallback map bounds adjusted for collectors and meters");
-          } else {
-            console.warn("No valid bounds calculated; using default view");
-          }
-
-          // Add event listener for meter filter in fallback case
-          const meterFilterSelect = document.getElementById("meter-filter");
-          meterFilterSelect.addEventListener("change", function(e) {
-            const filterValue = e.target.value;
-            console.log(`Filtering meters by: ${filterValue}`);
-            meterMarkers.forEach(({ marker, performance }) => {
-              if (filterValue === "all") {
-                marker.addTo(window.map);
-                marker.getElement().style.opacity = "0.3"; // Reapply opacity after adding
-              } else if (filterValue === "none") {
-                marker.remove();
-              } else {
-                const filterPerformance = parseFloat(filterValue);
-                if (performance === filterPerformance) {
-                  marker.addTo(window.map);
-                  marker.getElement().style.opacity = "0.3"; // Reapply opacity after adding
-                } else {
-                  marker.remove();
-                }
-              }
-            });
-          });
-        },
-        error: function(error) {
-          console.error("Failed to fetch meter data in fallback:", error);
-          if (!bounds.isEmpty()) {
-            window.map.fitBounds(bounds, { padding: 30, maxZoom: 11 });
-            console.log("Fallback map bounds adjusted for collectors only");
-          }
-        }
-      });
-    }
-  });
-}
-document.addEventListener("DOMContentLoaded", function() {
-  initializeMap();
-  updateCollectorStatus();
-  updateReadingAndMissingData();
-  renderInfoCodeChart();
-  updateCollectorTable();
-
-  const mapStyleSelect = document.getElementById("map-style");
-  if (mapStyleSelect) {
-    mapStyleSelect.addEventListener("change", function(e) {
-      if (window.map) {
-        window.map.setStyle("mapbox://styles/mapbox/" + e.target.value);
-      }
-    });
-  }
-
-  document.getElementById("toggle-rings").addEventListener("change", function(e) {
-    const visible = e.target.checked;
-    const ringLayers = window.map.getStyle().layers?.filter(layer => layer.id.startsWith("ring-")) || [];
-    ringLayers.forEach(layer => {
-      window.map.setLayoutProperty(layer.id, "visibility", visible ? "visible" : "none");
-    });
-  });
-
-  window.map.on("style.load", () => {
-    renderRangeRings(window.map);
-    const visible = document.getElementById("toggle-rings").checked;
-    const ringLayers = window.map.getStyle().layers?.filter(layer => layer.id.startsWith("ring-")) || [];
-    ringLayers.forEach(layer => {
-      window.map.setLayoutProperty(layer.id, "visibility", visible ? "visible" : "none");
-    });
-  });
-});
 </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93c1f03a6983bd00',t:'MTc0NjYzMzcxMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93eb2c84fd40bff1',t:'MTc0NzA2NjA5Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93ec0e5249f3bd17',t:'MTc0NzA3NTM0Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
 </body>
 </html>
