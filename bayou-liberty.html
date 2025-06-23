@@ -283,5 +283,30 @@ document.addEventListener("DOMContentLoaded", function () {
         const wrapper = document.querySelector('.nav-wrapper');
         wrapper.classList.toggle('active');
     }
-    </script></body>
+    </script>
+<script>
+  // Load city performance data
+  Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=0&single=true&output=csv", {
+    download: true,
+    header: true,
+    complete: function(results) {
+      const row = results.data.find(r =>
+        (r["City"] || "").trim().toLowerCase() === "bayou liberty"
+      );
+
+      if (row) {
+        const performance = row["Performance (%)"] || "N/A";
+        const totalMeters = row["Total Meters"] || "N/A";
+        const missingReads = row["Meters with Missing Reads"] || "N/A";
+
+        document.getElementById("reading-performance").textContent = `${performance}%`;
+        document.getElementById("total-missing").textContent = `${totalMeters} Total / ${missingReads} Missing`;
+      } else {
+        document.getElementById("reading-performance").textContent = "No data";
+        document.getElementById("total-missing").textContent = "No data";
+      }
+    }
+  });
+</script>
+</body>
 </html>
