@@ -220,11 +220,7 @@
 </tbody>
 </table>
 </div>
-<div style="flex: 1 1 300px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 10px 10px 5px; text-align: center;">
-<h2 style="margin: 0; color: #b91c1c; font-size: 1.1em;">HIGH Priority Info Codes</h2>
-<p id="high-priority-codes" style="font-size: 1.6em; margin: 10px 0; color: #b91c1c;"></p>
-<canvas height="120" id="infoCodeChart" style="margin-top: 10px;"></canvas>
-</div>
+
 <div style="margin-top: 30px;">
 <a href="louisiana.html" style="display:inline-block;padding:10px 20px;background:#2c5782;color:white;text-decoration:none;border-radius:5px;">← Back to Louisiana Collectors</a>
 </div>
@@ -319,72 +315,44 @@ document.addEventListener("DOMContentLoaded", function () {
         const tr = document.createElement("tr");
         tr.innerHTML = `<td>${name}</td><td>${serial}</td><td>${lastContact}</td><td>${comments}</td>`;
         tableBody.appendChild(tr);
+      });
+    }
+  });
 
+    }
+  });
 
-  // Load HIGH Priority Info Codes and render bar chart
-  Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQKvCYwfdM0Pr8FR86WI4tkteELWXNLejguUNygSG41R9blMjXLB6atYKmWvvI5Z8tOfZ7EC62A4I4l/pub?gid=188207719&single=true&output=csv", {
+});
+</script>
+<script>
+    function toggleMenu() {
+        const wrapper = document.querySelector('.nav-wrapper');
+        wrapper.classList.toggle('active');
+    }
+    </script>
+<script>
+  // Load city performance data
+  Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=0&single=true&output=csv", {
     download: true,
     header: true,
     complete: function(results) {
-      const rows = results.data.filter(row =>
-        row["City"]?.trim().toLowerCase() === "bayou liberty"
+      const row = results.data.find(r =>
+        (r["City"] || "").trim().toLowerCase() === "bayou liberty"
       );
 
-      const codeCounts = {};
+      if (row) {
+        const performance = row["Performance (%)"] || "N/A";
+        const totalMeters = row["Total Meters"] || "N/A";
+        const missingReads = row["Meters with Missing Reads"] || "N/A";
 
-      rows.forEach(row => {
-        const code = row["Info Code"]?.trim();
-        if (code) {
-          codeCounts[code] = (codeCounts[code] || 0) + 1;
-        }
-      });
-
-      
-<script>
-  // Load HIGH Priority Info Codes and render bar chart (fixed version)
-  Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQKvCYwfdM0Pr8FR86WI4tkteELWXNLejguUNygSG41R9blMjXLB6atYKmWvvI5Z8tOfZ7EC62A4I4l/pub?gid=188207719&single=true&output=csv", {
-    download: true,
-    header: true,
-    complete: function(results) {
-      const labels = [];
-      const counts = [];
-
-      results.data.forEach(row => {
-        const code = row["Info Code"];
-        const count = parseInt(row["Count"]);
-        if (code && !isNaN(count)) {
-          labels.push(code);
-          counts.push(count);
-        }
-      });
-
-      const ctx = document.getElementById("infoCodeChart").getContext("2d");
-      new Chart(ctx, {
-        type: "bar",
-        data: {
-          labels: labels,
-          datasets: [{
-            label: "Count",
-            data: counts,
-            backgroundColor: "#b91c1c"
-          }]
-        },
-        options: {
-          plugins: {
-            legend: { display: false }
-          },
-          scales: {
-            x: {
-              title: { display: true, text: "Info Code" }
-            },
-            y: {
-              beginAtZero: true,
-              title: { display: true, text: "Count" }
-            }
-          }
-        }
-      });
+        document.getElementById("reading-performance").textContent = `${performance}%`;
+        document.getElementById("total-missing").textContent = `${totalMeters} / ${missingReads}`;
+      } else {
+        document.getElementById("reading-performance").textContent = "No data";
+        document.getElementById("total-missing").textContent = "No data";
+      }
     }
   });
 </script>
 </body>
+</html>
