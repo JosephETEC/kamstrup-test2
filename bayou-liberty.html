@@ -456,8 +456,11 @@ Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1
           responsive: true,
           scales: {
             y: {
-              beginAtZero: true,
-              max: 100
+              min: Math.max(0, Math.min(...dataPoints) - 5),
+              max: Math.min(100, Math.max(...dataPoints) + 5),
+              ticks: {
+                stepSize: 5
+              }
             }
           },
           plugins: {
