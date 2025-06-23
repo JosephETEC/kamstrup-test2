@@ -44,8 +44,8 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Diamondhead, MS - Dashboard</title>
-<link href="https://unpkg.com/leaflet/dist/leaflet.css" rel="stylesheet"/>
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
@@ -166,6 +166,10 @@
             }
         }
         </style>
+
+<link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet"/>
+<script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+
 </head>
 <body>
 <header>
@@ -210,187 +214,62 @@
 <div style="margin-top: 30px;">
 <a href="mississippi.html" style="display:inline-block;padding:10px 20px;background:#2c5782;color:white;text-decoration:none;border-radius:5px;">← Back to Mississippi Collectors</a>
 </div>
-<script>
-function updateCollectorStatus() {
-  Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=11820546&single=true&output=csv", {
-    download: true,
-    header: false,
-    complete: function(results) {
-      const data = results.data.slice(1);
-      let onlineCount = 0;
-      let offlineCount = 0;
-      data.forEach(row => {
-        const city = row[0]?.trim().toLowerCase();
-        const issue = row[5]?.trim();
-        if (city === "diamondhead") {
-          if (issue === "Yes") offlineCount++;
-          else if (issue === "No") onlineCount++;
-        }
-      });
-      const statusEl = document.getElementById("collector-status");
-      statusEl.innerText = `Online: ${onlineCount} / Offline: ${offlineCount}`;
-      statusEl.style.color = offlineCount > 0 ? "#e11d48" : "#10b981";
-    },
-    error: function(error) {
-      console.error("Failed to fetch collector status:", error);
-      document.getElementById("collector-status").innerText = "Error loading status";
-    }
-  });
-}
-function updateReadingAndMissingData() {
-  Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=0&single=true&output=csv", {
-    download: true,
-    header: true,
-    complete: function(results) {
-      const data = results.data;
-      const row = data.find(r => r["City"]?.trim().toLowerCase() === "diamondhead");
-      if (row) {
-        document.getElementById("total-missing").innerText = `${row["Total Meters"] || "N/A"} / ${row["Meters with Missing Reads"] || "N/A"}`;
-        document.getElementById("reading-performance").innerText = `${row["Performance (%)"] || "N/A"}%`;
-      } else {
-        document.getElementById("total-missing").innerText = "Not Found";
-        document.getElementById("reading-performance").innerText = "Not Found";
-      }
-    },
-    error: function(error) {
-      console.error("Failed to fetch reading data:", error);
-      document.getElementById("total-missing").innerText = "Error";
-      document.getElementById("reading-performance").innerText = "Error";
-    }
-  });
-}
-function renderInfoCodeChart() {
-  Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vTcljBo59YwstDHi6bxOhxChseTNq1SHGl85YH10m21ThpTgZW7mq5uamll5ylp8yCJa_ZEIv_SFV50/pub?gid=1176696739&single=true&output=csv", {
-    download: true,
-    header: true,
-    complete: function(results) {
-      const data = results.data.filter(r => r["Info Code"] && r["Count"]);
-      const labels = data.map(row => row["Info Code"]);
-      const counts = data.map(row => parseInt(row["Count"], 10));
-      const ctx = document.getElementById("infoCodeChart");
-      if (ctx) {
-        Chart.register(ChartDataLabels);
-        new Chart(ctx.getContext("2d"), {
-          type: "bar",
-          data: {
-            labels: labels,
-            datasets: [{ label: "Count", data: counts, backgroundColor: "#f87171" }]
-          },
-          options: {
-            responsive: true,
-            scales: { y: { beginAtZero: true } },
-            plugins: {
-              legend: { display: false },
-              title: { display: true, text: "Info Codes (Diamondhead)", font: { size: 16 } },
-              tooltip: { callbacks: { label: context => `Count: ${context.raw}` } },
-              datalabels: {
-                anchor: 'end',
-                align: 'top',
-                color: '#2c5782',
-                font: { weight: 'bold' },
-                formatter: (value) => value
-              }
-            }
-          }
-        });
-      }
-    },
-    error: function(error) {
-      console.error("Failed to fetch info codes:", error);
-      document.getElementById("high-priority-codes").innerText = "Error loading codes";
-    }
-  });
-}
-document.addEventListener("DOMContentLoaded", function () {
-  var map = L.map('map').setView([30.3885, -89.3676], 14);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '© OpenStreetMap contributors'
-  }).addTo(map);
-  var greenIcon = L.divIcon({
-    className: 'custom-icon',
-    html: '<div style="background-color: #10b981; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white;"></div>',
-    iconSize: [20, 20],
-    iconAnchor: [10, 10]
-  });
-  var redIcon = L.divIcon({
-    className: 'custom-icon',
-    html: '<div style="background-color: #e11d48; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white;"></div>',
-    iconSize: [20, 20],
-    iconAnchor: [10, 10]
-  });
-  Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=11820546&single=true&output=csv", {
-    download: true,
-    header: true,
-    complete: function(results) {
-      const data = results.data;
-      console.log("Raw Data:", data);
-      const header = results.meta.fields;
-      console.log("Header Row:", header);
-      const issueIndex = header.indexOf("Collector Issue");
-      console.log("Collector Issue Index:", issueIndex);
-      const diamondheadCollectors = data.filter(row => row["City"]?.trim().toLowerCase() === "diamondhead");
-      console.log("Diamondhead Collectors:", diamondheadCollectors);
-      var locations = [[33.492981, -88.431892, "Riverhill Tank"]];
-      locations.forEach(([lat, lon, name]) => {
-        const collector = diamondheadCollectors.find(row => row["Collector Name"]?.trim().toLowerCase() === name.toLowerCase());
-        const issueValue = collector ? collector["Collector Issue"]?.trim() : null;
-        const isOnline = issueValue === "No" || !collector || issueValue !== "Yes";
-        console.log(`Collector: ${name}, Issue: ${issueValue}, Online: ${isOnline}`);
-        if (!collector) {
-          console.warn(`Collector not found in Google Sheet: ${name}`);
-        }
-        const icon = isOnline ? greenIcon : redIcon;
-        L.marker([lat, lon], { icon: icon }).addTo(map).bindPopup(`${name}<br>Status: ${isOnline ? 'Online' : 'Offline'}`);
-      });
-      map.fitBounds(locations.map(([lat, lon]) => [lat, lon]), { padding: [30, 30], maxZoom: 14 });
-    },
-    error: function(error) {
-      console.error("Failed to fetch collector data from Google Sheet:", error);
-      var locations = [[33.492981, -88.431892, "Riverhill Tank"]];
-      locations.forEach(([lat, lon, name]) => {
-        L.marker([lat, lon], { icon: greenIcon }).addTo(map).bindPopup(`${name}<br>Status: Online (Error)`);
-      });
-      map.fitBounds(locations.map(([lat, lon]) => [lat, lon]), { padding: [30, 30], maxZoom: 14 });
-    }
-  });
-});
-function updateCollectorTable() {
-  Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=11820546&single=true&output=csv", {
-    download: true,
-    header: true,
-    complete: function(results) {
-      const data = results.data;
-      const tableBody = document.querySelector(".info tbody");
-      tableBody.innerHTML = "";
-      const filtered = data.filter(row => row["City"]?.trim().toLowerCase() === "diamondhead");
-      filtered.forEach(row => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${row["Collector Name"] || "N/A"}</td>
-          <td>${row["Serial Number"] || "N/A"}</td>
-          <td>${row["Last Contact"] || "N/A"}</td>
-          <td>${row["Comments"] || ""}</td>
-        `;
-        tableBody.appendChild(tr);
-      });
-    },
-    error: function(error) {
-      console.error("Failed to fetch collector table data:", error);
-      const tableBody = document.querySelector(".info tbody");
-      tableBody.innerHTML = "<tr><td colspan='4'>Error loading data</td></tr>";
-    }
-  });
-}
-document.addEventListener("DOMContentLoaded", updateCollectorStatus);
-document.addEventListener("DOMContentLoaded", updateReadingAndMissingData);
-document.addEventListener("DOMContentLoaded", renderInfoCodeChart);
-document.addEventListener("DOMContentLoaded", updateCollectorTable);
-</script>
+
 <script>
     function toggleMenu() {
         const wrapper = document.querySelector('.nav-wrapper');
         wrapper.classList.toggle('active');
     }
-    </script></body>
+    </script>
+<script>
+mapboxgl.accessToken = 'pk.eyJ1Ijoiam9zZXBoLWhlYmVydCIsImEiOiJjbWF5ZG0wcTYwODJmMmxwdDI1MjNxenVlIn0.DPzjMzumd_bBfVS0Rqs3Xw';
+const map = new mapboxgl.Map({
+  container: 'map',
+  style: 'mapbox://styles/mapbox/streets-v12',
+  center: [-89.3676, 30.3885],
+  zoom: 1.5
+});
+
+const green = '#10b981';
+const red = '#e11d48';
+const bounds = new mapboxgl.LngLatBounds();
+
+Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=11820546&single=true&output=csv", {
+  download: true,
+  header: true,
+  complete: function(results) {
+    const data = results.data.filter(row => (row["City"] || "").trim().toLowerCase() === "diamondhead");
+    data.forEach(row => {
+      const lat = parseFloat(row["Latitude"]);
+      const lon = parseFloat(row["Longitude"]);
+      const name = row["Collector Name"] || "Unknown";
+      const status = (row["Collector Issue"] || "").toLowerCase() === "yes" ? "Offline" : "Online";
+      const color = status === "Online" ? green : red;
+
+      if (!isNaN(lat) && !isNaN(lon)) {
+        new mapboxgl.Marker({ color })
+          .setLngLat([lon, lat])
+          .setPopup(new mapboxgl.Popup().setText(`${name}\nStatus: ${status}`))
+          .addTo(map);
+        bounds.extend([lon, lat]);
+      }
+    });
+
+    if (!bounds.isEmpty()) {
+      map.fitBounds(bounds, { padding: 100, maxZoom: 14 });
+      setTimeout(() => {
+        map.flyTo({
+          center: bounds.getCenter(),
+          zoom: 13,
+          speed: 0.5,
+          curve: 1.5,
+          easing: (t) => t
+        });
+      }, 1000);
+    }
+  }
+});
+</script>
+
+</body>
 </html>
