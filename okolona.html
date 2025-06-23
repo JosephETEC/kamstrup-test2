@@ -59,12 +59,18 @@
       text-align: center;
     }
     header {
-      background-color: #2c5782;
-      padding: 12px 20px;
-      color: white;
-      text-align: center;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
+  background-color: #2c5782;
+  color: white;
+  width: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 999;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  height: 60px;
+  display: flex;
+  align-items: center;
+}
     nav {
       display: flex;
       flex-wrap: wrap;
@@ -173,15 +179,7 @@
 </head>
 <body>
 <header>
-<div class="nav-wrapper"><div class="hamburger" onclick="toggleMenu()"><div></div><div></div><div></div></div><nav>
-<a href="index.html">Home</a>
-<a href="mississippi.html">Mississippi</a>
-<a href="columbus.html">Columbus</a>
-<a href="diamondhead.html">Diamondhead</a>
-<a href="jackson.html">Jackson</a>
-<a href="moss-point.html">Moss Point</a>
-<a href="okolona.html">Okolona</a>
-</nav></div>
+<div class="nav-wrapper" style="width: 100%;"><div class="hamburger" onclick="toggleMenu()"><div></div><div></div><div></div></div><nav><a href="index.html">Home</a><a href="mississippi.html">Mississippi</a><a href="columbus.html">Columbus</a><a href="diamondhead.html">Diamondhead</a><a href="jackson.html">Jackson</a><a href="moss-point.html">Moss Point</a><a href="okolona.html">Okolona</a></nav></div>
 </header>
 <h1>Okolona, MS - Dashboard</h1>
 
