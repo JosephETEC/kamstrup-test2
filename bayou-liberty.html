@@ -221,6 +221,13 @@
 </table>
 </div>
 
+
+<div style="width: 100%; text-align: center; margin-top: 40px;">
+  <h2 style="color: #2c5782;">Past 5 Days of Performance</h2>
+  <div style="display: flex; justify-content: center; gap: 20px; margin-top: 20px; flex-wrap: wrap;">
+    <div id="historical-performance-tiles" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; width: 100%;"></div>
+  </div>
+</div>
 <div style="margin-top: 30px;">
 <a href="louisiana.html" style="display:inline-block;padding:10px 20px;background:#2c5782;color:white;text-decoration:none;border-radius:5px;">← Back to Louisiana Collectors</a>
 </div>
@@ -367,5 +374,44 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 </script>
+
+<script>
+  Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=468224320&single=true&output=csv", {
+    download: true,
+    header: true,
+    complete: function(results) {
+      const city = "bayou liberty";
+      const rows = results.data.filter(r =>
+        (r["City"] || "").trim().toLowerCase() === city &&
+        r["Performance (%)"] && r["Date"]
+      );
+
+      const sorted = rows.sort((a, b) => new Date(b["Date"]) - new Date(a["Date"])).slice(0, 5);
+      const container = document.getElementById("historical-performance-tiles");
+
+      if (sorted.length > 0) {
+        sorted.forEach(row => {
+          const tile = document.createElement("div");
+          tile.style.flex = "1 1 300px";
+          tile.style.background = "white";
+          tile.style.borderRadius = "12px";
+          tile.style.boxShadow = "0 4px 12px rgba(0,0,0,0.1)";
+          tile.style.padding = "20px";
+          tile.style.textAlign = "center";
+
+          tile.innerHTML = `
+            <h2 style="margin: 0; color: #2c5782;">${row["Date"]}</h2>
+            <p style="font-size: 2em; margin: 10px 0;">${row["Performance (%)"]}%</p>
+          `;
+
+          container.appendChild(tile);
+        });
+      } else {
+        container.innerHTML = "<p>No historical data available.</p>";
+      }
+    }
+  });
+</script>
+
 </body>
 </html>
