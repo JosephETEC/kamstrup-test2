@@ -241,7 +241,7 @@ document.addEventListener("DOMContentLoaded", function () {
     header: true,
     complete: function(results) {
       const data = results.data.filter(row =>
-        (row["City"] || "").trim().toLowerCase() === "columbus" &&
+        (row["City"] || "").trim().toLowerCase() === "diamondhead" &&
         row["Latitude"] &&
         row["Longitude"]
       );
@@ -291,7 +291,7 @@ document.addEventListener("DOMContentLoaded", function () {
     header: true,
     complete: function(results) {
       const collectors = results.data.filter(row =>
-        (row["City"] || "").trim().toLowerCase() === "columbus"
+        (row["City"] || "").trim().toLowerCase() === "diamondhead"
       );
 
       let onlineCount = 0;
@@ -313,7 +313,7 @@ document.addEventListener("DOMContentLoaded", function () {
     complete: function(results) {
       const tableBody = document.querySelector("tbody");
       const collectors = results.data.filter(row =>
-        (row["City"] || "").trim().toLowerCase() === "columbus"
+        (row["City"] || "").trim().toLowerCase() === "diamondhead"
       );
 
       tableBody.innerHTML = "";
