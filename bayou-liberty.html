@@ -300,7 +300,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const missingReads = row["Meters with Missing Reads"] || "N/A";
 
         document.getElementById("reading-performance").textContent = `${performance}%`;
-        document.getElementById("total-missing").textContent = `${totalMeters} Total / ${missingReads} Missing`;
+        document.getElementById("total-missing").textContent = `${totalMeters} / ${missingReads}`;
       } else {
         document.getElementById("reading-performance").textContent = "No data";
         document.getElementById("total-missing").textContent = "No data";
