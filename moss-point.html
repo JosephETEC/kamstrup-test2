@@ -175,15 +175,13 @@
 <a href="columbus.html">Columbus</a>
 <a href="diamondhead.html">Diamondhead</a>
 <a href="jackson.html">Jackson</a>
+<a href="moss-point.html">Moss Point</a>
 <a href="okolona.html">Okolona</a>
 </nav></div>
 </header>
 <h1>Moss Point, MS - Dashboard</h1>
 <div style="display: flex; justify-content: center; gap: 20px; margin: 20px 0; flex-wrap: wrap;">
-<div style="flex: 1 1 300px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 20px; text-align: center;">
-<h2 style="margin: 0; color: #2c5782;">Total Meters / Missing Reads</h2>
-<p id="total-missing" style="font-size: 1.8em; margin:10px 0;">Loading...</p>
-</div>
+
 <div style="flex: 1 1 300px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 20px; text-align: center;">
 <h2 style="margin: 0; color: #2c5782;">Reading Performance</h2>
 <p id="reading-performance" style="font-size: 2em; margin: 10px 0;">Loading...</p>
@@ -200,7 +198,7 @@
 <tr><th>Collector Name</th><th>Serial Number</th><th>Last Contact</th><th>Comments</th></tr>
 </thead>
 <tbody>
-<!-- Dynamically populated Columbus collectors -->
+<!-- Dynamically populated Moss Point collectors -->
 </tbody>
 </table>
 </div>
@@ -224,7 +222,7 @@ function updateCollectorStatus() {
       data.forEach(row => {
         const city = row[0]?.trim().toLowerCase();
         const issue = row[5]?.trim();
-        if (city === "moss point") {
+        if (city === "moss-point") {
           if (issue === "Yes") offlineCount++;
           else if (issue === "No") onlineCount++;
         }
@@ -245,7 +243,7 @@ function updateReadingAndMissingData() {
     header: true,
     complete: function(results) {
       const data = results.data;
-      const row = data.find(r => r["City"]?.trim().toLowerCase() === "moss point");
+      const row = data.find(r => r["City"]?.trim().toLowerCase() === "moss-point");
       if (row) {
         document.getElementById("total-missing").innerText = `${row["Total Meters"] || "N/A"} / ${row["Meters with Missing Reads"] || "N/A"}`;
         document.getElementById("reading-performance").innerText = `${row["Performance (%)"] || "N/A"}%`;
@@ -283,7 +281,7 @@ function renderInfoCodeChart() {
             scales: { y: { beginAtZero: true } },
             plugins: {
               legend: { display: false },
-              title: { display: true, text: "Info Codes (moss point)", font: { size: 16 } },
+              title: { display: true, text: "Info Codes (Moss Point)", font: { size: 16 } },
               tooltip: { callbacks: { label: context => `Count: ${context.raw}` } },
               datalabels: {
                 anchor: 'end',
@@ -304,7 +302,7 @@ function renderInfoCodeChart() {
   });
 }
 document.addEventListener("DOMContentLoaded", function () {
-  var map = L.map('map').setView([33.492981, -88.431892], 14);
+  var map = L.map('map').setView([30.4115, -88.5348], 14);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '© OpenStreetMap contributors'
@@ -331,11 +329,11 @@ document.addEventListener("DOMContentLoaded", function () {
       console.log("Header Row:", header);
       const issueIndex = header.indexOf("Collector Issue");
       console.log("Collector Issue Index:", issueIndex);
-      const moss pointCollectors = data.filter(row => row["City"]?.trim().toLowerCase() === "moss point");
-      console.log("moss point Collectors:", moss pointCollectors);
+      const moss-pointCollectors = data.filter(row => row["City"]?.trim().toLowerCase() === "moss-point");
+      console.log("Moss Point Collectors:", moss-pointCollectors);
       var locations = [[33.492981, -88.431892, "Riverhill Tank"]];
       locations.forEach(([lat, lon, name]) => {
-        const collector = moss pointCollectors.find(row => row["Collector Name"]?.trim().toLowerCase() === name.toLowerCase());
+        const collector = moss-pointCollectors.find(row => row["Collector Name"]?.trim().toLowerCase() === name.toLowerCase());
         const issueValue = collector ? collector["Collector Issue"]?.trim() : null;
         const isOnline = issueValue === "No" || !collector || issueValue !== "Yes";
         console.log(`Collector: ${name}, Issue: ${issueValue}, Online: ${isOnline}`);
@@ -365,7 +363,7 @@ function updateCollectorTable() {
       const data = results.data;
       const tableBody = document.querySelector(".info tbody");
       tableBody.innerHTML = "";
-      const filtered = data.filter(row => row["City"]?.trim().toLowerCase() === "moss point");
+      const filtered = data.filter(row => row["City"]?.trim().toLowerCase() === "moss-point");
       filtered.forEach(row => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
