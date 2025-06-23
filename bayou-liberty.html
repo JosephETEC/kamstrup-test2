@@ -276,6 +276,29 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   map.on('load', () => map.resize());
+
+  // Load collector status for Bayou Liberty
+  Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=96572475&single=true&output=csv", {
+    download: true,
+    header: true,
+    complete: function(results) {
+      const collectors = results.data.filter(row =>
+        row["City"]?.trim().toLowerCase() === "bayou liberty"
+      );
+
+      let onlineCount = 0;
+      let offlineCount = 0;
+
+      collectors.forEach(row => {
+        const issue = row["Collector Issue"]?.trim().toLowerCase();
+        if (issue === "yes") offlineCount++;
+        else if (issue === "no") onlineCount++;
+      });
+
+      document.getElementById("collector-status").textContent = `${onlineCount} Online / ${offlineCount} Offline`;
+    }
+  });
+
 });
 </script>
 <script>
