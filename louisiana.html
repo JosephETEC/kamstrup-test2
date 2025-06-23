@@ -37,7 +37,7 @@ const map = new mapboxgl.Map({
   container: 'map',
   style: 'mapbox://styles/mapbox/streets-v12',
   center: [-92.1, 31.2],
-  zoom: 5.8
+  zoom: 1.5
 });
 
 const bounds = new mapboxgl.LngLatBounds();
@@ -91,6 +91,17 @@ map.on('load', () => {
 
           if (hasValid) {
             map.fitBounds(bounds, { padding: { top: 100, bottom: 200, left: 100, right: 100 } });
+
+            setTimeout(() => {
+              map.flyTo({
+                center: bounds.getCenter(),
+                zoom: 5.8,
+                speed: 0.5,
+                curve: 1.5,
+                easing: (t) => t
+              });
+            }, 1000);
+
           }
         }
       });
