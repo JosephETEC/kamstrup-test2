@@ -231,7 +231,7 @@ document.addEventListener("DOMContentLoaded", function () {
     container: 'map',
     style: 'mapbox://styles/mapbox/streets-v12',
     center: [-92.1176, 31.0635],
-    zoom: 12
+    zoom: 1.5
   });
 
   const green = '#10b981';
@@ -267,6 +267,19 @@ document.addEventListener("DOMContentLoaded", function () {
 
       if (!bounds.isEmpty()) {
         map.fitBounds(bounds, { padding: 100, maxZoom: 14 });
+
+        if (!bounds.isEmpty()) {
+          setTimeout(() => {
+            map.flyTo({
+              center: bounds.getCenter(),
+              zoom: 13,
+              speed: 0.5,
+              curve: 1.5,
+              easing: (t) => t
+            });
+          }, 1000);
+        }
+
       }
     }
   });
