@@ -220,7 +220,11 @@
 </tbody>
 </table>
 </div>
-
+<div style="flex: 1 1 300px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 10px 10px 5px; text-align: center;">
+<h2 style="margin: 0; color: #b91c1c; font-size: 1.1em;">HIGH Priority Info Codes</h2>
+<p id="high-priority-codes" style="font-size: 1.6em; margin: 10px 0; color: #b91c1c;"></p>
+<canvas height="120" id="infoCodeChart" style="margin-top: 10px;"></canvas>
+</div>
 <div style="margin-top: 30px;">
 <a href="louisiana.html" style="display:inline-block;padding:10px 20px;background:#2c5782;color:white;text-decoration:none;border-radius:5px;">← Back to Louisiana Collectors</a>
 </div>
@@ -231,7 +235,7 @@ document.addEventListener("DOMContentLoaded", function () {
     container: 'map',
     style: 'mapbox://styles/mapbox/streets-v12',
     center: [-89.818090, 30.286212],
-    zoom: 1.5
+    zoom: 12
   });
 
   const green = '#10b981';
@@ -267,24 +271,61 @@ document.addEventListener("DOMContentLoaded", function () {
 
       if (!bounds.isEmpty()) {
         map.fitBounds(bounds, { padding: 100, maxZoom: 14 });
-
-        if (!bounds.isEmpty()) {
-          setTimeout(() => {
-            map.flyTo({
-              center: bounds.getCenter(),
-              zoom: 11,
-              speed: 0.5,
-              curve: 1.5,
-              easing: (t) => t
-            });
-          }, 1000);
-        }
-
       }
     }
   });
 
   map.on('load', () => map.resize());
+
+  // Load collector status for Bayou Liberty
+  Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=96572475&single=true&output=csv", {
+    download: true,
+    header: true,
+    complete: function(results) {
+      const collectors = results.data.filter(row =>
+        row["City"]?.trim().toLowerCase() === "bayou liberty"
+      );
+
+      let onlineCount = 0;
+      let offlineCount = 0;
+
+      collectors.forEach(row => {
+        const issue = row["Collector Issue"]?.trim().toLowerCase();
+        if (issue === "yes") offlineCount++;
+        else if (issue === "no") onlineCount++;
+      });
+
+      document.getElementById("collector-status").textContent = `${onlineCount} Online / ${offlineCount} Offline`;
+
+
+  // Populate collector table
+  Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=96572475&single=true&output=csv", {
+    download: true,
+    header: true,
+    complete: function(results) {
+      const tableBody = document.querySelector("tbody");
+      const collectors = results.data.filter(row =>
+        row["City"]?.trim().toLowerCase() === "bayou liberty"
+      );
+
+      tableBody.innerHTML = "";
+
+      collectors.forEach(row => {
+        const name = row["Collector Name"] || "";
+        const serial = row["Serial Number"] || "";
+        const lastContact = row["Last Contact"] || "";
+        const comments = row["Comments"] || "";
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${name}</td><td>${serial}</td><td>${lastContact}</td><td>${comments}</td>`;
+        tableBody.appendChild(tr);
+      });
+    }
+  });
+
+    }
+  });
+
 });
 </script>
 <script>
@@ -292,5 +333,30 @@ document.addEventListener("DOMContentLoaded", function () {
         const wrapper = document.querySelector('.nav-wrapper');
         wrapper.classList.toggle('active');
     }
-    </script></body>
+    </script>
+<script>
+  // Load city performance data
+  Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=0&single=true&output=csv", {
+    download: true,
+    header: true,
+    complete: function(results) {
+      const row = results.data.find(r =>
+        (r["City"] || "").trim().toLowerCase() === "bayou liberty"
+      );
+
+      if (row) {
+        const performance = row["Performance (%)"] || "N/A";
+        const totalMeters = row["Total Meters"] || "N/A";
+        const missingReads = row["Meters with Missing Reads"] || "N/A";
+
+        document.getElementById("reading-performance").textContent = `${performance}%`;
+        document.getElementById("total-missing").textContent = `${totalMeters} / ${missingReads}`;
+      } else {
+        document.getElementById("reading-performance").textContent = "No data";
+        document.getElementById("total-missing").textContent = "No data";
+      }
+    }
+  });
+</script>
+</body>
 </html>
