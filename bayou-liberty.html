@@ -203,6 +203,10 @@
 <div style="flex: 1 1 300px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 20px; text-align: center;">
 <h2 style="margin: 0; color: #2c5782;">Reading Performance</h2>
 <p id="reading-performance" style="font-size: 2em; margin: 10px 0;">Loading...</p>
+<div id="historical-performance" style="font-size: 0.9em; margin-top: 15px;">
+  <em>Loading historical performance...</em>
+</div>
+
 </div>
 <div style="flex: 1 1 300px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 20px; text-align: center;">
 <h2 style="margin: 0; color: #2c5782;">Collector Status</h2>
@@ -366,6 +370,38 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     }
   });
+</script>
+
+<script>
+// Load historical performance for Bayou Liberty
+Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=468224320&single=true&output=csv", {
+  download: true,
+  header: true,
+  complete: function(results) {
+    const data = results.data
+      .filter(row => row["City"]?.trim().toLowerCase() === "bayou liberty")
+      .sort((a, b) => new Date(b["Date"]) - new Date(a["Date"]))
+      .slice(0, 5);
+
+    const container = document.getElementById("historical-performance");
+    if (data.length === 0) {
+      container.textContent = "No historical data available.";
+      return;
+    }
+
+    const table = document.createElement("table");
+    table.innerHTML = "<tr><th>Date</th><th>Performance (%)</th></tr>";
+
+    data.forEach(row => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td>${row["Date"]}</td><td>${row["Performance (%)"]}%</td>`;
+      table.appendChild(tr);
+    });
+
+    container.innerHTML = "";
+    container.appendChild(table);
+  }
+});
 </script>
 </body>
 </html>
