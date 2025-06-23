@@ -247,7 +247,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const color = status === "Online" ? green : red;
 
         if (!isNaN(lat) && !isNaN(lon)) {
-          new mapboxgl.Marker({ color })
+          new mapboxgl.Marker({ color }).setPopup(new mapboxgl.Popup({ offset: 25 }))
             .setLngLat([lon, lat])
             .setPopup(new mapboxgl.Popup().setText(`${name}\nStatus: ${status}`))
             .addTo(map);
@@ -262,7 +262,7 @@ document.addEventListener("DOMContentLoaded", function () {
           setTimeout(() => {
             map.flyTo({
               center: bounds.getCenter(),
-              zoom: 13,
+              zoom: 11,
               speed: 0.5,
               curve: 1.5,
               easing: (t) => t
