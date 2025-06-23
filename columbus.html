@@ -49,20 +49,26 @@
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 <style>
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #f4f4f4;
-      margin: 0;
-      padding: 20px;
-      color: #2c5782;
-      text-align: center;
-    }
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #f4f4f4;
+  margin: 0;
+  padding-top: 80px;
+  color: #2c5782;
+  text-align: center;
+}
     header {
-      background-color: #2c5782;
-      padding: 12px 20px;
-      color: white;
-      text-align: center;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
+  background-color: #2c5782;
+  color: white;
+  width: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 999;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  height: 60px;
+  display: flex;
+  align-items: center;
+}
     nav {
       display: flex;
       flex-wrap: wrap;
@@ -119,8 +125,13 @@
     }
   
         .nav-wrapper {
-            position: relative;
-        }
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
         
             .nav-wrapper.active nav {
                 display: flex;
@@ -135,8 +146,13 @@
         }
         
         .nav-wrapper {
-            position: relative;
-        }
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
         .hamburger {
             display: none;
             flex-direction: column;
@@ -164,11 +180,7 @@
             }
         }
         </style>
-
-<link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet"/>
-<script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
-
-</head>
+<link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet"/><script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script></head>
 <body>
 <header>
 <div class="nav-wrapper"><div class="hamburger" onclick="toggleMenu()"><div></div><div></div><div></div></div><nav>
@@ -177,6 +189,7 @@
 <a href="columbus.html">Columbus</a>
 <a href="diamondhead.html">Diamondhead</a>
 <a href="jackson.html">Jackson</a>
+<a href="moss-point.html">Moss Point</a>
 <a href="okolona.html">Okolona</a>
 </nav></div>
 </header>
@@ -206,47 +219,122 @@
 </tbody>
 </table>
 </div>
-<div style="flex: 1 1 300px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 10px 10px 5px; text-align: center;">
-<h2 style="margin: 0; color: #b91c1c; font-size: 1.1em;">HIGH Priority Info Codes</h2>
-<p id="high-priority-codes" style="font-size: 1.6em; margin: 10px 0; color: #b91c1c;"></p>
-<canvas height="120" id="infoCodeChart" style="margin-top: 10px;"></canvas>
-</div>
+
 <div style="margin-top: 30px;">
 <a href="mississippi.html" style="display:inline-block;padding:10px 20px;background:#2c5782;color:white;text-decoration:none;border-radius:5px;">← Back to Mississippi Collectors</a>
 </div>
 <script>
-function updateCollectorStatus() {
-  function updateCollectorTable() {
-  Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=11820546&single=true&output=csv", {
+document.addEventListener("DOMContentLoaded", function () {
+  mapboxgl.accessToken = 'pk.eyJ1Ijoiam9zZXBoLWhlYmVydCIsImEiOiJjbWF5ZG0wcTYwODJmMmxwdDI1MjNxenVlIn0.DPzjMzumd_bBfVS0Rqs3Xw';
+  const map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/mapbox/streets-v12',
+    center: [-88.431892, 33.492981],
+    zoom: 1.5
+  });
+
+  const green = '#10b981';
+  const red = '#e11d48';
+
+  Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=96572475&single=true&output=csv", {
     download: true,
     header: true,
     complete: function(results) {
-      const data = results.data;
-      const tableBody = document.querySelector(".info tbody");
-      tableBody.innerHTML = "";
-      const filtered = data.filter(row => row["City"]?.trim().toLowerCase() === "columbus");
-      filtered.forEach(row => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${row["Collector Name"] || "N/A"}</td>
-          <td>${row["Serial Number"] || "N/A"}</td>
-          <td>${row["Last Contact"] || "N/A"}</td>
-          <td>${row["Comments"] || ""}</td>
-        `;
-        tableBody.appendChild(tr);
+      const data = results.data.filter(row =>
+        (row["City"] || "").trim().toLowerCase() === "columbus" &&
+        row["Latitude"] &&
+        row["Longitude"]
+      );
+
+      const bounds = new mapboxgl.LngLatBounds();
+
+      data.forEach(row => {
+        const name = row["Collector Name"] || "Unknown";
+        const lat = parseFloat(row["Latitude"]);
+        const lon = parseFloat(row["Longitude"]);
+        const status = row["Collector Issue"]?.trim().toLowerCase() === "yes" ? "Offline" : "Online";
+        const color = status === "Online" ? green : red;
+
+        if (!isNaN(lat) && !isNaN(lon)) {
+          new mapboxgl.Marker({ color })
+            .setLngLat([lon, lat])
+            .setPopup(new mapboxgl.Popup().setText(`${name}\nStatus: ${status}`))
+            .addTo(map);
+          bounds.extend([lon, lat]);
+        }
       });
-    },
-    error: function(error) {
-      console.error("Failed to fetch collector table data:", error);
-      const tableBody = document.querySelector(".info tbody");
-      tableBody.innerHTML = "<tr><td colspan='4'>Error loading data</td></tr>";
+
+      if (!bounds.isEmpty()) {
+        map.fitBounds(bounds, { padding: 100, maxZoom: 14 });
+
+        if (!bounds.isEmpty()) {
+          setTimeout(() => {
+            map.flyTo({
+              center: bounds.getCenter(),
+              zoom: 13,
+              speed: 0.5,
+              curve: 1.5,
+              easing: (t) => t
+            });
+          }, 1000);
+        }
+
+      }
     }
   });
-}
-document.addEventListener("DOMContentLoaded", updateCollectorStatus);
-document.addEventListener("DOMContentLoaded", updateReadingAndMissingData);
-document.addEventListener("DOMContentLoaded", renderInfoCodeChart);
-document.addEventListener("DOMContentLoaded", updateCollectorTable);
+
+  map.on('load', () => map.resize());
+
+  // Load collector status for Columbus
+  Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=96572475&single=true&output=csv", {
+    download: true,
+    header: true,
+    complete: function(results) {
+      const collectors = results.data.filter(row =>
+        (row["City"] || "").trim().toLowerCase() === "columbus"
+      );
+
+      let onlineCount = 0;
+      let offlineCount = 0;
+
+      collectors.forEach(row => {
+        const issue = row["Collector Issue"]?.trim().toLowerCase();
+        if (issue === "yes") offlineCount++;
+        else if (issue === "no") onlineCount++;
+      });
+
+      document.getElementById("collector-status").textContent = `${onlineCount} Online / ${offlineCount} Offline`;
+
+
+  // Populate collector table
+  Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=96572475&single=true&output=csv", {
+    download: true,
+    header: true,
+    complete: function(results) {
+      const tableBody = document.querySelector("tbody");
+      const collectors = results.data.filter(row =>
+        (row["City"] || "").trim().toLowerCase() === "columbus"
+      );
+
+      tableBody.innerHTML = "";
+
+      collectors.forEach(row => {
+        const name = row["Collector Name"] || "";
+        const serial = row["Serial Number"] || "";
+        const lastContact = row["Last Contact"] || "";
+        const comments = row["Comments"] || "";
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${name}</td><td>${serial}</td><td>${lastContact}</td><td>${comments}</td>`;
+        tableBody.appendChild(tr);
+      });
+    }
+  });
+
+    }
+  });
+
+});
 </script>
 <script>
     function toggleMenu() {
@@ -255,54 +343,28 @@ document.addEventListener("DOMContentLoaded", updateCollectorTable);
     }
     </script>
 <script>
-mapboxgl.accessToken = 'pk.eyJ1Ijoiam9zZXBoLWhlYmVydCIsImEiOiJjbWF5ZG0wcTYwODJmMmxwdDI1MjNxenVlIn0.DPzjMzumd_bBfVS0Rqs3Xw';
-const map = new mapboxgl.Map({
-  container: 'map',
-  style: 'mapbox://styles/mapbox/streets-v12',
-  center: [-88.431892, 33.492981],
-  zoom: 1.5
-});
+  // Load city performance data
+  Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=0&single=true&output=csv", {
+    download: true,
+    header: true,
+    complete: function(results) {
+      const row = results.data.find(r =>
+        (r["City"] || "").trim().toLowerCase() === "columbus"
+      );
 
-const bounds = new mapboxgl.LngLatBounds();
-const green = '#10b981';
-const red = '#e11d48';
+      if (row) {
+        const performance = row["Performance (%)"] || "N/A";
+        const totalMeters = row["Total Meters"] || "N/A";
+        const missingReads = row["Meters with Missing Reads"] || "N/A";
 
-Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=11820546&single=true&output=csv", {
-  download: true,
-  header: true,
-  complete: function(results) {
-    const data = results.data.filter(row => (row["City"] || "").trim().toLowerCase() === "columbus");
-    data.forEach(row => {
-      const lat = parseFloat(row["Latitude"]);
-      const lon = parseFloat(row["Longitude"]);
-      const name = row["Collector Name"] || "Unknown";
-      const status = (row["Collector Issue"] || "").toLowerCase() === "yes" ? "Offline" : "Online";
-      const color = status === "Online" ? green : red;
-
-      if (!isNaN(lat) && !isNaN(lon)) {
-        new mapboxgl.Marker({ color })
-          .setLngLat([lon, lat])
-          .setPopup(new mapboxgl.Popup().setText(`${name}\nStatus: ${status}`))
-          .addTo(map);
-        bounds.extend([lon, lat]);
+        document.getElementById("reading-performance").textContent = `${performance}%`;
+        document.getElementById("total-missing").textContent = `${totalMeters} / ${missingReads}`;
+      } else {
+        document.getElementById("reading-performance").textContent = "No data";
+        document.getElementById("total-missing").textContent = "No data";
       }
-    });
-
-    if (!bounds.isEmpty()) {
-      map.fitBounds(bounds, { padding: 100, maxZoom: 14 });
-      setTimeout(() => {
-        map.flyTo({
-          center: bounds.getCenter(),
-          zoom: 13,
-          speed: 0.5,
-          curve: 1.5,
-          easing: (t) => t
-        });
-      }, 1000);
     }
-  }
-});
+  });
 </script>
 </body>
-
 </html>
