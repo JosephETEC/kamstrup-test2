@@ -242,7 +242,7 @@ document.addEventListener("DOMContentLoaded", function () {
     header: true,
     complete: function(results) {
       const data = results.data.filter(row =>
-        (row["City"] || "").trim().toLowerCase() === "lake-charles" &&
+        (row["City"] || "").trim().toLowerCase() === "lake charles" &&
         row["Latitude"] &&
         row["Longitude"]
       );
@@ -292,7 +292,7 @@ document.addEventListener("DOMContentLoaded", function () {
     header: true,
     complete: function(results) {
       const collectors = results.data.filter(row =>
-        (row["City"] || "").trim().toLowerCase() === "lake-charles"
+        (row["City"] || "").trim().toLowerCase() === "lake charles"
       );
 
       let onlineCount = 0;
@@ -314,7 +314,7 @@ document.addEventListener("DOMContentLoaded", function () {
     complete: function(results) {
       const tableBody = document.querySelector("tbody");
       const collectors = results.data.filter(row =>
-        (row["City"] || "").trim().toLowerCase() === "lake-charles"
+        (row["City"] || "").trim().toLowerCase() === "lake charles"
       );
 
       tableBody.innerHTML = "";
@@ -350,7 +350,7 @@ document.addEventListener("DOMContentLoaded", function () {
     header: true,
     complete: function(results) {
       const row = results.data.find(r =>
-        (r["City"] || "").trim().toLowerCase() === "lake-charles"
+        (r["City"] || "").trim().toLowerCase() === "lake charles"
       );
 
       if (row) {
