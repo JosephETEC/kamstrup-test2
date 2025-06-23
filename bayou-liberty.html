@@ -319,6 +319,55 @@ document.addEventListener("DOMContentLoaded", function () {
         const tr = document.createElement("tr");
         tr.innerHTML = `<td>${name}</td><td>${serial}</td><td>${lastContact}</td><td>${comments}</td>`;
         tableBody.appendChild(tr);
+
+
+  // Load HIGH Priority Info Codes and render bar chart
+  Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQKvCYwfdM0Pr8FR86WI4tkteELWXNLejguUNygSG41R9blMjXLB6atYKmWvvI5Z8tOfZ7EC62A4I4l/pub?gid=188207719&single=true&output=csv", {
+    download: true,
+    header: true,
+    complete: function(results) {
+      const rows = results.data.filter(row =>
+        row["City"]?.trim().toLowerCase() === "bayou liberty"
+      );
+
+      const codeCounts = {};
+
+      rows.forEach(row => {
+        const code = row["Info Code"]?.trim();
+        if (code) {
+          codeCounts[code] = (codeCounts[code] || 0) + 1;
+        }
+      });
+
+      const ctx = document.getElementById("infoCodeChart").getContext("2d");
+      new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: Object.keys(codeCounts),
+          datasets: [{
+            label: "Info Code Count",
+            data: Object.values(codeCounts),
+            backgroundColor: "#b91c1c"
+          }]
+        },
+        options: {
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            x: {
+              title: { display: true, text: "Info Code" }
+            },
+            y: {
+              beginAtZero: true,
+              title: { display: true, text: "Count" }
+            }
+          }
+        }
+      });
+    }
+  });
+
       });
     }
   });
