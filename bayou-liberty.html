@@ -296,6 +296,33 @@ document.addEventListener("DOMContentLoaded", function () {
       });
 
       document.getElementById("collector-status").textContent = `${onlineCount} Online / ${offlineCount} Offline`;
+
+
+  // Populate collector table
+  Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQyeLPDZNq8dJ6_3DDD1yTXDw66v56SM9uUvwddYm51NJG4EojAKdM_YV9ifOBJt0-yl6wUZ5Xf22Io/pub?gid=96572475&single=true&output=csv", {
+    download: true,
+    header: true,
+    complete: function(results) {
+      const tableBody = document.querySelector("tbody");
+      const collectors = results.data.filter(row =>
+        row["City"]?.trim().toLowerCase() === "bayou liberty"
+      );
+
+      tableBody.innerHTML = "";
+
+      collectors.forEach(row => {
+        const name = row["Collector Name"] || "";
+        const serial = row["Serial Number"] || "";
+        const lastContact = row["Last Contact"] || "";
+        const comments = row["Comments"] || "";
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${name}</td><td>${serial}</td><td>${lastContact}</td><td>${comments}</td>`;
+        tableBody.appendChild(tr);
+      });
+    }
+  });
+
     }
   });
 
